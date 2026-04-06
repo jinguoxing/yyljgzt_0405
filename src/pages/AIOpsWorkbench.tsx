@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Search, Filter, Plus, Clock, MessageSquare, PlayCircle, 
@@ -40,16 +40,53 @@ export default function AIOpsWorkbench() {
   
   const [inputText, setInputText] = useState('');
   const [activeTab, setActiveTab] = useState('run'); // run, todo, deliverable, replay
-  const [activeTaskId, setActiveTaskId] = useState<string>('REQ-20260227-001');
+  const [activeTaskId, setActiveTaskId] = useState<string | null>('REQ-20260227-001');
   const [dropdownOpenId, setDropdownOpenId] = useState<string | null>(null);
   const [isLeftPanelOpen, setIsLeftPanelOpen] = useState(true);
   const [isRightPanelOpen, setIsRightPanelOpen] = useState(true);
+  
+  // New state for post-initiation confirmation bar
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [lastCreatedTask, setLastCreatedTask] = useState<any>(null);
+  const navTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleCreateRequest = (start: boolean) => {
-    setIsCreateModalOpen(false);
+    if (navTimerRef.current) clearTimeout(navTimerRef.current);
+
     const newId = `REQ-20260227-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`;
-    navigate(`/aiops/workbench/requests/${newId}`);
+    const newTask = {
+      id: newId,
+      title: inputText || '新创建的任务',
+      status: 'RUNNING',
+      category: '进行中',
+      type: '语义治理',
+      blockers: { hard: 0, soft: 0 },
+      lastUpdated: '刚刚'
+    };
+    
+    setLastCreatedTask(newTask);
+    setShowConfirmation(true);
+    
+    // Auto-navigate after 1.5 seconds unless user stays
+    navTimerRef.current = setTimeout(() => {
+      navigate(`/aiops/workbench/requests/${newId}`);
+    }, 1500);
   };
+
+  const handleStayOnHomepage = () => {
+    if (navTimerRef.current) {
+      clearTimeout(navTimerRef.current);
+      navTimerRef.current = null;
+    }
+    setShowConfirmation(false);
+  };
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (navTimerRef.current) clearTimeout(navTimerRef.current);
+    };
+  }, []);
 
   const handleSelectTemplate = (template: any) => {
     setIsTemplateLibraryOpen(false);
@@ -108,6 +145,12 @@ export default function AIOpsWorkbench() {
             <Plus size={16} />
             <span>新建任务</span>
           </button>
+          <div className="relative">
+            <button className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center cursor-pointer hover:bg-slate-700 transition-colors">
+              <MessageSquare size={16} className="text-slate-300" />
+            </button>
+            <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 border-2 border-slate-900 rounded-full"></span>
+          </div>
           <div className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center cursor-pointer hover:bg-slate-700 transition-colors">
             <User size={16} className="text-slate-300" />
           </div>
@@ -151,7 +194,6 @@ export default function AIOpsWorkbench() {
                           <div 
                             key={task.id} 
                             onClick={() => setActiveTaskId(task.id)}
-                            onMouseLeave={() => setDropdownOpenId(null)}
                             className={cn(
                               "p-3 rounded-xl border transition-all cursor-pointer group relative", 
                               activeTaskId === task.id 
@@ -217,7 +259,7 @@ export default function AIOpsWorkbench() {
 
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col overflow-hidden bg-slate-950">
-          {/* 3. Unified Input Bar */}
+          {/* 3. Unified Launcher */}
           <div className="p-6 border-b border-slate-800 bg-slate-900/20 shrink-0">
             <div className="max-w-4xl mx-auto">
               <div className="relative bg-slate-900 border border-slate-700 rounded-xl shadow-sm focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500 transition-all">
@@ -234,6 +276,11 @@ export default function AIOpsWorkbench() {
                     <span className="px-2 py-1 bg-indigo-500/10 text-indigo-400 text-xs rounded border border-indigo-500/20 flex items-center">
                       <Database size={12} className="mr-1" />
                       public.orders
+                      <button className="ml-1 hover:text-indigo-300"><X size={12}/></button>
+                    </span>
+                    <span className="px-2 py-1 bg-indigo-500/10 text-indigo-400 text-xs rounded border border-indigo-500/20 flex items-center">
+                      <Bot size={12} className="mr-1" />
+                      HR 域
                       <button className="ml-1 hover:text-indigo-300"><X size={12}/></button>
                     </span>
                     <button className="text-xs text-slate-500 hover:text-slate-300 transition-colors">清空</button>
@@ -259,230 +306,208 @@ export default function AIOpsWorkbench() {
                   </button>
                 </div>
               </div>
+
+              {/* Post-Initiation Confirmation Bar */}
+              {showConfirmation && lastCreatedTask && (
+                <div className="mt-4 bg-indigo-600/10 border border-indigo-500/30 rounded-lg p-3 flex items-center justify-between animate-in fade-in slide-in-from-top-2 duration-300">
+                  <div className="flex items-center space-x-3 overflow-hidden">
+                    <div className="w-8 h-8 rounded-full bg-indigo-500/20 flex items-center justify-center shrink-0">
+                      <CheckCircle2 size={16} className="text-indigo-400" />
+                    </div>
+                    <div className="overflow-hidden">
+                      <div className="text-sm font-medium text-slate-200 truncate">已创建任务：{lastCreatedTask.title}</div>
+                      <div className="text-xs text-slate-400 truncate">系统理解为：语义治理任务，将自动完成扫描与规则草案生成，冲突项待人工确认</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2 ml-4 shrink-0">
+                    <button 
+                      onClick={() => navigate(`/aiops/workbench/requests/${lastCreatedTask.id}`)}
+                      className="text-xs bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded transition-colors"
+                    >
+                      进入详情
+                    </button>
+                    <button 
+                      onClick={handleStayOnHomepage}
+                      className="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded transition-colors"
+                    >
+                      留在首页
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
-          {/* 4. Main Workspace */}
+          {/* 4. Main Workspace (Summary Only) */}
           <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
-            <div className="max-w-5xl mx-auto space-y-6">
-              
-              {/* A. System Understanding Card */}
-              <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-sm font-medium text-slate-200 flex items-center">
+            {activeTaskId ? (
+              <div className="max-w-5xl mx-auto space-y-8">
+                {/* Block A: Task Title + Status */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <h2 className="text-2xl font-bold text-slate-100">
+                      {MOCK_TASKS.find(t => t.id === activeTaskId)?.title || '任务摘要'}
+                    </h2>
+                    <span className={cn(
+                      "px-2 py-0.5 rounded text-xs font-medium border",
+                      getStatusConfig(MOCK_TASKS.find(t => t.id === activeTaskId)?.status || '').color
+                    )}>
+                      {getStatusConfig(MOCK_TASKS.find(t => t.id === activeTaskId)?.status || '').label}
+                    </span>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <button 
+                      onClick={() => navigate(`/aiops/workbench/requests/${activeTaskId}`)}
+                      className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-lg shadow-indigo-900/20"
+                    >
+                      进入详情
+                    </button>
+                    <button className="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-lg text-sm font-medium transition-colors border border-slate-700">
+                      修改配置
+                    </button>
+                  </div>
+                </div>
+
+                {/* Block B: System Understanding Summary */}
+                <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm">
+                  <h3 className="text-sm font-medium text-slate-200 mb-3 flex items-center">
                     <Bot size={16} className="mr-2 text-indigo-400"/> 
                     系统理解
                   </h3>
-                  <div className="flex items-center space-x-2">
-                    <button className="text-xs text-slate-400 hover:text-slate-200 transition-colors px-2 py-1 rounded hover:bg-slate-800">修改配置</button>
-                    <button className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors px-2 py-1 rounded hover:bg-indigo-500/10">查看详情</button>
+                  <p className="text-sm text-slate-300 leading-relaxed">
+                    系统已理解为：语义治理任务，目标是完成 hr_core_db.employees 的结构理解、字段语义判定，并生成候选业务对象。
+                  </p>
+                  <div className="mt-4 flex items-center space-x-4">
+                    <button className="text-xs text-indigo-400 hover:underline">查看完整理解</button>
+                    <button className="text-xs text-indigo-400 hover:underline">修改任务配置</button>
                   </div>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                  <div className="flex flex-col space-y-1">
-                    <span className="text-xs text-slate-500">任务类型</span>
-                    <span className="text-slate-300">语义治理</span>
-                  </div>
-                  <div className="flex flex-col space-y-1">
-                    <span className="text-xs text-slate-500">AI 员工</span>
-                    <span className="text-slate-300 flex items-center">数据语义理解专家 <span className="ml-2 text-[10px] font-bold text-amber-500 bg-amber-500/10 px-1 rounded">L2</span></span>
-                  </div>
-                  <div className="flex flex-col space-y-1 md:col-span-2">
-                    <span className="text-xs text-slate-500">当前目标</span>
-                    <span className="text-slate-300">完成 hr_core_db.employees 的结构理解、字段语义判定，并生成候选业务对象</span>
-                  </div>
-                  <div className="flex flex-col space-y-1 md:col-span-2">
-                    <span className="text-xs text-slate-500">当前范围</span>
-                    <span className="text-slate-300">HR 域 / hr_core_db / employees</span>
-                  </div>
-                  <div className="flex flex-col space-y-1 md:col-span-2">
-                    <span className="text-xs text-slate-500">执行策略</span>
-                    <span className="text-slate-300">系统自动完成扫描、画像和规则草案生成；语义冲突与对象合并建议转人工确认</span>
-                  </div>
-                </div>
-              </div>
-              
-              {/* B. Closed-loop Status Bar */}
-              <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-sm font-medium text-slate-200 flex items-center">
-                    <Activity size={16} className="mr-2 text-emerald-400"/> 
-                    闭环状态
-                  </h3>
-                  <div className="flex items-center space-x-4 text-xs">
-                    <span className="text-slate-400">已完成 <span className="text-slate-200 font-medium">3/5</span></span>
-                    <span className="text-slate-400">待确认 <span className="text-slate-200 font-medium">2</span></span>
-                    <span className="text-slate-400">Hard-block <span className="text-slate-200 font-medium">0</span></span>
-                    <span className="text-slate-400">Soft-task <span className="text-slate-200 font-medium">3</span></span>
-                    <span className="text-slate-400">当前交付物 <span className="text-slate-200 font-medium">2</span></span>
-                    <span className="px-2 py-0.5 rounded bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 font-medium">暂不可正式交付</span>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between relative px-4">
-                  <div className="absolute left-4 right-4 top-1/2 -translate-y-1/2 h-0.5 bg-slate-800 z-0"></div>
-                  <div className="absolute left-4 top-1/2 -translate-y-1/2 w-1/2 h-0.5 bg-indigo-500 z-0"></div>
-                  
-                  {[
-                    { label: '需求解析', status: 'done' },
-                    { label: '方案生成', status: 'done' },
-                    { label: '执行中', status: 'active' },
-                    { label: '待确认', status: 'pending' },
-                    { label: '完成', status: 'pending' }
-                  ].map((step, idx) => (
-                    <div key={idx} className="relative z-10 flex flex-col items-center">
-                      <div className={cn(
-                        "w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border-2 bg-slate-900",
-                        step.status === 'done' ? "border-indigo-500 text-indigo-500" :
-                        step.status === 'active' ? "border-indigo-400 text-indigo-400 shadow-[0_0_10px_rgba(99,102,241,0.5)]" :
-                        "border-slate-700 text-slate-500"
-                      )}>
-                        {step.status === 'done' ? <CheckCircle2 size={14} /> : idx + 1}
-                      </div>
-                      <span className={cn(
-                        "text-xs mt-2 font-medium absolute top-8 whitespace-nowrap",
-                        step.status === 'done' ? "text-slate-300" :
-                        step.status === 'active' ? "text-indigo-400" :
-                        "text-slate-500"
-                      )}>{step.label}</span>
-                    </div>
-                  ))}
-                </div>
-                <div className="h-6"></div> {/* Spacer for absolute labels */}
-              </div>
 
-              {/* C. Top 3 Important Tasks */}
-              <div>
-                <h3 className="text-sm font-medium text-slate-200 mb-4 flex items-center">
-                  <AlertCircle size={16} className="mr-2 text-amber-400"/> 
-                  当前最重要任务
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Task 1 */}
-                  <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 hover:border-slate-700 transition-colors flex flex-col">
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex items-center space-x-2">
-                        <span className="text-[10px] font-mono text-slate-500 bg-slate-800 px-1.5 py-0.5 rounded">FIELD_SEMANTIC_UNRESOLVED</span>
-                        <span className="text-[10px] text-slate-500 border border-slate-700 px-1.5 py-0.5 rounded">阻塞交付: 否</span>
-                      </div>
-                      <span className="text-xs text-slate-500 flex items-center"><Clock size={12} className="mr-1"/> 10分钟前</span>
-                    </div>
-                    <h4 className="text-sm font-bold text-slate-200 mb-2">字段语义冲突待确认</h4>
-                    <div className="text-xs text-slate-300 mb-1"><span className="text-slate-500">问题：</span>发现 3 个字段存在语义冲突</div>
-                    <div className="text-xs text-slate-400 mb-4 line-clamp-2"><span className="text-slate-500">原因：</span>department_id / manager_id 的 Top1 与 Top2 候选差异过小</div>
-                    
-                    <div className="mt-auto pt-3 border-t border-slate-800/50 flex items-center justify-between">
-                      <div className="text-xs text-indigo-400 flex items-center">
-                        <span className="text-slate-500 mr-1">推荐动作：</span>进入字段语义裁决
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <button className="text-xs text-slate-400 hover:text-slate-200 transition-colors">稍后处理</button>
-                        <button className="text-xs text-slate-400 hover:text-slate-200 transition-colors">查看原因</button>
-                        <button 
-                          onClick={() => navigate('/aiops/workbench/requests/REQ-20260227-001')}
-                          className="text-xs bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded transition-colors"
-                        >
-                          立即处理
-                        </button>
+                {/* Block C: Closed-loop Summary */}
+                <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-sm">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-6">
+                      <h3 className="text-sm font-medium text-slate-200 flex items-center">
+                        <Activity size={16} className="mr-2 text-emerald-400"/> 
+                        闭环摘要
+                      </h3>
+                      <div className="flex items-center space-x-4 text-xs">
+                        <span className="text-slate-400">已完成 <span className="text-slate-200 font-medium">3/5</span></span>
+                        <span className="text-slate-400">待确认 <span className="text-slate-200 font-medium">2</span></span>
+                        <span className="text-slate-400">Hard-block <span className="text-slate-200 font-medium">0</span></span>
+                        <span className="text-slate-400">Soft-task <span className="text-slate-200 font-medium">3</span></span>
                       </div>
                     </div>
-                  </div>
-
-                  {/* Task 2 */}
-                  <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 hover:border-slate-700 transition-colors flex flex-col">
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex items-center space-x-2">
-                        <span className="text-[10px] font-mono text-slate-500 bg-slate-800 px-1.5 py-0.5 rounded">DUPLICATE_OBJECT</span>
-                        <span className="text-[10px] text-red-400 border border-red-500/20 bg-red-500/10 px-1.5 py-0.5 rounded">阻塞交付: 是</span>
-                      </div>
-                      <span className="text-xs text-slate-500 flex items-center"><Clock size={12} className="mr-1"/> 2小时前</span>
-                    </div>
-                    <h4 className="text-sm font-bold text-slate-200 mb-2">候选对象存在合并建议</h4>
-                    <div className="text-xs text-slate-300 mb-1"><span className="text-slate-500">问题：</span>发现 2 个候选对象可能表达同一业务语义</div>
-                    <div className="text-xs text-slate-400 mb-4 line-clamp-2"><span className="text-slate-500">原因：</span>主键与核心属性高度重叠</div>
-                    
-                    <div className="mt-auto pt-3 border-t border-slate-800/50 flex items-center justify-between">
-                      <div className="text-xs text-indigo-400 flex items-center">
-                        <span className="text-slate-500 mr-1">推荐动作：</span>进入对象合并对比
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <button className="text-xs text-slate-400 hover:text-slate-200 transition-colors">稍后处理</button>
-                        <button className="text-xs text-slate-400 hover:text-slate-200 transition-colors">查看原因</button>
-                        <button 
-                          onClick={() => navigate('/aiops/workbench/requests/REQ-20260227-001')}
-                          className="text-xs bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded transition-colors"
-                        >
-                          立即处理
-                        </button>
-                      </div>
-                    </div>
+                    <span className="px-2 py-0.5 rounded bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 text-xs font-medium">
+                      当前不可正式交付
+                    </span>
                   </div>
                 </div>
-              </div>
 
-              {/* D. Recent Outputs / Recommended Next Steps */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Block D: Top 2 Important Tasks */}
                 <div>
                   <h3 className="text-sm font-medium text-slate-200 mb-4 flex items-center">
-                    <FileText size={16} className="mr-2 text-blue-400"/> 
-                    最近产物
+                    <AlertCircle size={16} className="mr-2 text-amber-400"/> 
+                    当前最重要任务
                   </h3>
-                  <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
-                    <div className="divide-y divide-slate-800/50">
-                      {[
-                        { title: '语义结果草案', desc: '包含 45 个字段的语义推断结果', time: '10分钟前' },
-                        { title: '质量规则草案', desc: '基于字段特征生成的 12 条基础规则', time: '1小时前' },
-                        { title: '候选对象清单', desc: '提取出 3 个潜在业务对象', time: '2小时前' }
-                      ].map((item, i) => (
-                        <div key={i} className="p-3 hover:bg-slate-800/30 transition-colors flex items-center justify-between group cursor-pointer">
-                          <div className="flex items-center space-x-3">
-                            <div className="w-8 h-8 rounded bg-blue-500/10 text-blue-400 flex items-center justify-center shrink-0">
-                              <Package size={14} />
-                            </div>
-                            <div>
-                              <h4 className="text-sm font-medium text-slate-200 group-hover:text-indigo-400 transition-colors">{item.title}</h4>
-                              <p className="text-[10px] text-slate-500 mt-0.5">{item.desc}</p>
-                            </div>
-                          </div>
-                          <span className="text-[10px] text-slate-500">{item.time}</span>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Task 1 */}
+                    <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 hover:border-slate-700 transition-colors">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-[10px] font-mono text-slate-500 bg-slate-800 px-1.5 py-0.5 rounded">FIELD_SEMANTIC_UNRESOLVED</span>
+                          <span className="text-[10px] text-slate-500 border border-slate-700 px-1.5 py-0.5 rounded">非阻塞</span>
                         </div>
-                      ))}
+                      </div>
+                      <h4 className="text-sm font-bold text-slate-200 mb-1">字段语义冲突待确认</h4>
+                      <p className="text-xs text-slate-400 mb-4">发现 3 个字段存在语义冲突</p>
+                      <div className="flex items-center justify-between pt-3 border-t border-slate-800/50">
+                        <span className="text-xs text-indigo-400">推荐动作：进入字段语义裁决</span>
+                        <button 
+                          onClick={() => navigate(`/aiops/workbench/requests/${activeTaskId}`)}
+                          className="text-xs bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded transition-colors"
+                        >
+                          立即处理
+                        </button>
+                      </div>
                     </div>
+
+                    {/* Task 2 */}
+                    <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 hover:border-slate-700 transition-colors">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-[10px] font-mono text-slate-500 bg-slate-800 px-1.5 py-0.5 rounded">DUPLICATE_OBJECT</span>
+                          <span className="text-[10px] text-red-400 border border-red-500/20 bg-red-500/10 px-1.5 py-0.5 rounded">阻塞交付</span>
+                        </div>
+                      </div>
+                      <h4 className="text-sm font-bold text-slate-200 mb-1">候选对象存在合并建议</h4>
+                      <p className="text-xs text-slate-400 mb-4">发现 2 个候选对象可能表达同一业务语义</p>
+                      <div className="flex items-center justify-between pt-3 border-t border-slate-800/50">
+                        <span className="text-xs text-indigo-400">推荐动作：进入对象合并对比</span>
+                        <button 
+                          onClick={() => navigate(`/aiops/workbench/requests/${activeTaskId}`)}
+                          className="text-xs bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded transition-colors"
+                        >
+                          立即处理
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-4 text-center">
+                    <button className="text-xs text-slate-500 hover:text-slate-300 transition-colors">查看全部待处理</button>
                   </div>
                 </div>
 
+                {/* Block E: Recommended Next Steps */}
                 <div>
                   <h3 className="text-sm font-medium text-slate-200 mb-4 flex items-center">
                     <PlayCircle size={16} className="mr-2 text-emerald-400"/> 
                     推荐下一步
                   </h3>
-                  <div className="space-y-2">
-                    {[
-                      { title: '去处理冲突字段', action: '立即前往', primary: true },
-                      { title: '打开候选对象工作台', action: '打开', primary: false },
-                      { title: '重新运行 Stage D', action: '运行', primary: false },
-                      { title: '转入问数验证', action: '转入', primary: false }
-                    ].map((item, i) => (
-                      <div 
-                        key={i} 
-                        onClick={() => navigate('/aiops/workbench/requests/REQ-20260227-001')}
-                        className="p-3 bg-slate-900 border border-slate-800 rounded-xl hover:border-slate-700 transition-colors flex items-center justify-between group cursor-pointer"
-                      >
-                        <span className="text-sm text-slate-300 group-hover:text-slate-200">{item.title}</span>
-                        <button className={cn(
-                          "text-xs px-3 py-1.5 rounded transition-colors flex items-center",
-                          item.primary 
-                            ? "bg-indigo-600 hover:bg-indigo-500 text-white" 
-                            : "bg-slate-800 hover:bg-slate-700 text-slate-300"
-                        )}>
-                          {item.action} <ChevronRight size={14} className="ml-1" />
-                        </button>
-                      </div>
-                    ))}
+                  <div className="flex flex-wrap gap-3">
+                    <button 
+                      onClick={() => navigate(`/aiops/workbench/requests/${activeTaskId}`)}
+                      className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center"
+                    >
+                      进入详情继续处理 <ChevronRight size={16} className="ml-1" />
+                    </button>
+                    <button className="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-lg text-sm font-medium transition-colors border border-slate-700">
+                      处理字段冲突
+                    </button>
+                    <button className="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-lg text-sm font-medium transition-colors border border-slate-700">
+                      预览当前交付物
+                    </button>
                   </div>
                 </div>
               </div>
-
-            </div>
+            ) : (
+              <div className="h-full flex flex-col items-center justify-center text-center max-w-2xl mx-auto">
+                <div className="w-20 h-20 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center mb-6">
+                  <Bot size={40} className="text-indigo-500" />
+                </div>
+                <h2 className="text-xl font-bold text-slate-100 mb-3">
+                  告诉我你想完成什么
+                </h2>
+                <p className="text-slate-400 mb-8">
+                  我会帮你创建任务，并在详情页推进执行。你可以尝试解析表结构、查找指标数据或解释业务变化。
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full">
+                  {[
+                    '解析表结构与语义',
+                    '查找支持某指标分析的数据',
+                    '解释某指标变化原因'
+                  ].map((tpl, i) => (
+                    <button 
+                      key={i}
+                      onClick={() => setInputText(tpl)}
+                      className="p-4 bg-slate-900 border border-slate-800 rounded-xl hover:border-indigo-500/50 hover:bg-slate-800/50 transition-all text-sm text-slate-300"
+                    >
+                      {tpl}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -516,7 +541,7 @@ export default function AIOpsWorkbench() {
               {activeTab === 'run' && (
                 <div className="space-y-4">
                   <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl shadow-sm">
-                    <h4 className="text-xs font-medium text-slate-400 mb-4 uppercase tracking-wider">当前运行状态</h4>
+                    <h4 className="text-xs font-medium text-slate-400 mb-4 uppercase tracking-wider">运行摘要</h4>
                     <div className="space-y-3">
                       <div className="flex justify-between items-center">
                         <span className="text-xs text-slate-500">当前 Run ID</span>
@@ -536,31 +561,12 @@ export default function AIOpsWorkbench() {
                       </div>
                     </div>
                   </div>
-                  
-                  <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl shadow-sm">
-                    <h4 className="text-xs font-medium text-slate-400 mb-4 uppercase tracking-wider">最近动态</h4>
-                    <div className="space-y-4 relative before:absolute before:inset-0 before:ml-1.5 before:-translate-x-px before:h-full before:w-0.5 before:bg-slate-800">
-                      {[
-                        { time: '10:42 AM', desc: 'Data Steward AI 完成了 employees 表的扫描。' },
-                        { time: '10:35 AM', desc: '开始执行语义推断任务。' },
-                        { time: '10:30 AM', desc: '任务 RUN-8A9B2C 已启动。' }
-                      ].map((item, i) => (
-                        <div key={i} className="relative flex items-start group">
-                          <div className="flex items-center justify-center w-3 h-3 rounded-full border-2 border-slate-900 bg-indigo-500 shadow shrink-0 mt-1 z-10"></div>
-                          <div className="ml-3 w-full">
-                            <div className="text-[10px] text-slate-500 mb-0.5">{item.time}</div>
-                            <div className="text-xs text-slate-300 leading-relaxed">{item.desc}</div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
                 </div>
               )}
               {activeTab === 'todo' && (
                 <div className="space-y-4">
                   <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl shadow-sm">
-                    <h4 className="text-xs font-medium text-slate-400 mb-4 uppercase tracking-wider">待处理概览</h4>
+                    <h4 className="text-xs font-medium text-slate-400 mb-4 uppercase tracking-wider">待处理摘要</h4>
                     <div className="grid grid-cols-2 gap-3 mb-4">
                       <div className="bg-slate-950 p-3 rounded-lg border border-slate-800 flex flex-col items-center justify-center">
                         <div className="text-2xl font-bold text-red-400 mb-1">0</div>
@@ -572,9 +578,9 @@ export default function AIOpsWorkbench() {
                       </div>
                     </div>
                     <div>
-                      <span className="text-xs text-slate-500 block mb-2">最新待处理项</span>
+                      <span className="text-xs text-slate-500 block mb-2">最近待处理项</span>
                       <div className="p-3 bg-slate-950 border border-slate-800 rounded-lg">
-                        <div className="text-xs font-medium text-slate-200 mb-1">字段语义冲突待确认</div>
+                        <div className="text-xs font-medium text-slate-200 mb-1 truncate">3 个字段语义冲突待确认</div>
                         <div className="text-[10px] text-slate-500">10 分钟前</div>
                       </div>
                     </div>
@@ -584,25 +590,20 @@ export default function AIOpsWorkbench() {
               {activeTab === 'deliverable' && (
                 <div className="space-y-4">
                   <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl shadow-sm">
-                    <h4 className="text-xs font-medium text-slate-400 mb-4 uppercase tracking-wider">交付物状态</h4>
+                    <h4 className="text-xs font-medium text-slate-400 mb-4 uppercase tracking-wider">交付物摘要</h4>
                     <div className="space-y-4">
                       <div className="flex justify-between items-center">
-                        <span className="text-xs text-slate-500">已生成交付物数</span>
+                        <span className="text-xs text-slate-500">当前交付物数量</span>
                         <span className="text-lg font-bold text-emerald-400">2</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-xs text-slate-500">最近交付物类型</span>
-                        <span className="text-xs text-slate-300 bg-slate-800 px-2 py-1 rounded">语义结果草案</span>
+                        <span className="text-xs text-slate-500">最近交付物名称</span>
+                        <span className="text-xs text-slate-300 bg-slate-800 px-2 py-1 rounded truncate">候选对象清单</span>
                       </div>
                       <div className="pt-2 border-t border-slate-800/50">
-                        <span className="text-xs text-slate-500 block mb-2">当前可预览项</span>
-                        <div className="space-y-2">
-                          <div className="text-xs text-indigo-400 hover:underline cursor-pointer flex items-center">
-                            <FileText size={12} className="mr-1" /> 语义结果草案 v1.0
-                          </div>
-                          <div className="text-xs text-indigo-400 hover:underline cursor-pointer flex items-center">
-                            <FileText size={12} className="mr-1" /> 质量规则草案 v0.8
-                          </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-xs text-slate-500">当前状态</span>
+                          <span className="text-xs text-amber-400">可预览，不可正式交付</span>
                         </div>
                       </div>
                     </div>
@@ -612,24 +613,19 @@ export default function AIOpsWorkbench() {
               {activeTab === 'replay' && (
                 <div className="space-y-4">
                   <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl shadow-sm">
-                    <h4 className="text-xs font-medium text-slate-400 mb-4 uppercase tracking-wider">回放与对比</h4>
+                    <h4 className="text-xs font-medium text-slate-400 mb-4 uppercase tracking-wider">回放摘要</h4>
                     <div className="space-y-4">
                       <div className="flex justify-between items-center">
                         <span className="text-xs text-slate-500">最近回放版本</span>
-                        <span className="text-xs font-mono text-slate-300 bg-slate-800 px-1.5 py-0.5 rounded">v1.2.0-beta</span>
+                        <span className="text-xs font-mono text-slate-300 bg-slate-800 px-1.5 py-0.5 rounded">v1.2 vs v1.1</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-xs text-slate-500">差异字段数</span>
+                        <span className="text-xs text-slate-500">差异项</span>
                         <span className="text-xs font-bold text-amber-400">12</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-xs text-slate-500">最近一次对比时间</span>
-                        <span className="text-xs text-slate-300">2026-04-05 10:15</span>
-                      </div>
-                      <div className="pt-4 mt-2 border-t border-slate-800/50">
-                        <button className="w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs rounded-lg transition-colors flex items-center justify-center">
-                          <RotateCcw size={14} className="mr-2" /> 查看详细差异
-                        </button>
+                        <span className="text-xs text-slate-500">时间</span>
+                        <span className="text-xs text-slate-300">10 分钟前</span>
                       </div>
                     </div>
                   </div>

@@ -6,7 +6,7 @@ import {
   Clock, Activity, AlertTriangle, CheckCircle2, ChevronRight,
   PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, Send, Bot, User, Plus,
   RotateCcw, XCircle, ExternalLink, Download, Box, Play, ArrowUpCircle, Info,
-  Share2, ChevronLeft, Zap, Pause
+  Share2, ChevronLeft, Zap, Pause, RefreshCw
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'motion/react';

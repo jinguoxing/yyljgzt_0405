@@ -406,107 +406,41 @@ export default function AIOpsWorkbenchRequestDetail() {
         </div>
 
         {/* Main Column: Detail Narrative */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar bg-slate-950/50">
+        <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar bg-slate-950/50">
           
-          {/* A. 系统理解卡 */}
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-sm">
-            <div className="flex items-center justify-between mb-6">
+          {/* A. 系统理解卡 (轻展开) */}
+          <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-bold text-slate-200 flex items-center">
-                <BrainCircuit size={18} className="mr-2 text-indigo-400" />
+                <BrainCircuit size={16} className="mr-2 text-indigo-400" />
                 系统理解
               </h3>
-              <div className="flex items-center space-x-2">
-                <span className="text-[10px] text-slate-500">请求编号:</span>
-                <span className="text-[10px] font-mono text-slate-300 bg-slate-800 px-1.5 py-0.5 rounded">REQ-20260227-001</span>
-              </div>
             </div>
             
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <div className="space-y-4">
-                <div>
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-2">当前目标</label>
-                  <p className="text-sm text-slate-300 leading-relaxed">
-                    完成 <span className="text-indigo-400 font-mono">hr_core_db.employees</span> 的结构理解、字段语义判定，并生成候选业务对象。
-                  </p>
-                </div>
-                <div>
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-2">当前范围</label>
-                  <div className="flex flex-wrap gap-2">
-                    {['HR 域', 'hr_core_db', 'employees'].map(chip => (
-                      <span key={chip} className="px-2 py-0.5 bg-slate-800 text-slate-400 rounded text-xs border border-slate-700">{chip}</span>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-2">任务拆解</label>
-                  <div className="space-y-2">
-                    {[
-                      { id: 1, text: '数据源配置验证', done: true },
-                      { id: 2, text: '扫描与画像', done: true },
-                      { id: 3, text: '质量规则草案生成', done: true },
-                      { id: 4, text: '字段语义理解', current: true },
-                      { id: 5, text: '候选对象生成' },
-                    ].map(step => (
-                      <div key={step.id} className="flex items-center space-x-3 text-xs">
-                        <div className={cn(
-                          "w-5 h-5 rounded-full flex items-center justify-center border shrink-0",
-                          step.done ? "bg-emerald-500/20 border-emerald-500 text-emerald-400" :
-                          step.current ? "bg-indigo-500/20 border-indigo-500 text-indigo-400 animate-pulse" :
-                          "bg-slate-800 border-slate-700 text-slate-500"
-                        )}>
-                          {step.done ? <CheckCircle2 size={12} /> : step.id}
-                        </div>
-                        <span className={cn(
-                          step.done ? "text-slate-500 line-through" :
-                          step.current ? "text-slate-200 font-medium" :
-                          "text-slate-400"
-                        )}>{step.text}</span>
-                      </div>
-                    ))}
-                  </div>
+            <div className="space-y-3">
+              <div className="flex text-sm">
+                <span className="text-slate-500 w-20 shrink-0">任务类型：</span>
+                <span className="text-slate-300">语义治理</span>
+              </div>
+              <div className="flex text-sm">
+                <span className="text-slate-500 w-20 shrink-0">当前目标：</span>
+                <span className="text-slate-300">完成 <span className="text-indigo-400 font-mono text-xs">hr_core_db.employees</span> 的结构理解、字段语义判定，并生成候选业务对象</span>
+              </div>
+              <div className="flex text-sm items-center">
+                <span className="text-slate-500 w-20 shrink-0">当前范围：</span>
+                <div className="flex flex-wrap gap-2">
+                  <span className="text-xs text-slate-400">HR 域 / hr_core_db / employees</span>
                 </div>
               </div>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-2">执行策略</label>
-                  <div className="bg-slate-950/50 border border-slate-800 rounded-lg p-3">
-                    <p className="text-xs text-slate-400 leading-relaxed">
-                      系统自动完成扫描、画像和规则草案生成；针对 <span className="text-amber-400">语义冲突</span> 与 <span className="text-amber-400">对象合并建议</span> 将转由人工确认。
-                    </p>
-                  </div>
-                </div>
-                <div>
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-2">目标交付物</label>
-                  <div className="flex flex-wrap gap-2">
-                    {['语义结果', '质量规则草案', '候选对象'].map(d => (
-                      <div key={d} className="flex items-center space-x-1.5 px-2 py-1 bg-indigo-500/5 text-indigo-300 rounded text-xs border border-indigo-500/10">
-                        <Package size={12} />
-                        <span>{d}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-2">AI 员工</label>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-6 h-6 rounded bg-indigo-600 flex items-center justify-center text-white">
-                      <Bot size={14} />
-                    </div>
-                    <span className="text-xs text-slate-300 font-medium">数据语义理解专家 L2</span>
-                  </div>
-                </div>
+              <div className="flex text-sm">
+                <span className="text-slate-500 w-20 shrink-0">执行策略：</span>
+                <span className="text-slate-300">自动完成扫描与规则草案生成；冲突与合并建议转人工确认</span>
               </div>
             </div>
 
-            <div className="mt-8 pt-6 border-t border-slate-800 flex space-x-3">
-              <button className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium rounded-lg transition-colors border border-slate-700 flex items-center">
-                <FileSearch size={14} className="mr-2" />
-                查看完整理解
-              </button>
-              <button className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium rounded-lg transition-colors border border-slate-700 flex items-center">
-                <Settings size={14} className="mr-2" />
-                修改配置
+            <div className="mt-4 pt-4 border-t border-slate-800/50">
+              <button className="text-xs text-indigo-400 hover:text-indigo-300 flex items-center transition-colors">
+                <ChevronDown size={14} className="mr-1" /> 展开完整理解
               </button>
             </div>
           </div>
@@ -521,17 +455,17 @@ export default function AIOpsWorkbenchRequestDetail() {
                 <div className="w-px h-4 bg-slate-700"></div>
                 <div className="flex items-center space-x-1"><span className="text-slate-500">待确认：</span><span className="text-slate-200 font-medium">2</span></div>
                 <div className="w-px h-4 bg-slate-700"></div>
-                <div className="flex items-center space-x-1"><span className="text-slate-500">Hard-block：</span><span className="text-red-400 font-medium">0</span></div>
+                <div className="flex items-center space-x-1"><span className="text-slate-500">Hard-block：</span><span className="text-slate-200 font-medium">0</span></div>
                 <div className="w-px h-4 bg-slate-700"></div>
-                <div className="flex items-center space-x-1"><span className="text-slate-500">Soft-task：</span><span className="text-yellow-500 font-medium">3</span></div>
+                <div className="flex items-center space-x-1"><span className="text-slate-500">Soft-task：</span><span className="text-slate-200 font-medium">3</span></div>
                 <div className="w-px h-4 bg-slate-700"></div>
-                <div className="flex items-center space-x-1"><span className="text-slate-500">当前状态：</span><span className="text-yellow-500 font-medium">可预览，不可正式交付</span></div>
+                <div className="flex items-center space-x-1"><span className="text-yellow-500 font-medium">当前不可正式交付</span></div>
               </div>
               <button 
                 onClick={() => setIsGateExpanded(!isGateExpanded)}
-                className="text-xs text-slate-500 hover:text-slate-300 flex items-center space-x-1 ml-4"
+                className="text-xs text-slate-500 hover:text-slate-300 flex items-center space-x-1 ml-4 shrink-0"
               >
-                <span>门禁说明</span>
+                <span>查看门禁说明</span>
                 <ChevronDown size={14} className={cn("transition-transform", isGateExpanded && "rotate-180")} />
               </button>
             </div>
@@ -552,403 +486,168 @@ export default function AIOpsWorkbenchRequestDetail() {
                     <ul className="space-y-2">
                       <li className="flex items-start space-x-2 text-xs text-slate-300">
                         <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-1 shrink-0"></span>
-                        <span>仍有 2 个语义冲突待确认，影响核心字段准确性</span>
+                        <span>仍有 2 个语义冲突待确认</span>
                       </li>
                       <li className="flex items-start space-x-2 text-xs text-slate-300">
                         <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-1 shrink-0"></span>
-                        <span>1 个候选对象存在合并建议，可能导致对象冗余</span>
+                        <span>1 个候选对象存在合并建议</span>
                       </li>
                     </ul>
-                    <p className="mt-4 text-[10px] text-slate-500 italic">处理完以上任务后，系统将自动重新校验交付门禁。</p>
+                    <p className="mt-4 text-[10px] text-slate-500 italic">处理完成后将自动重新校验交付门禁</p>
                   </div>
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
 
-          {/* C. 当前主任务区 */}
+          {/* C. 当前主任务区 (唯一主操作区) */}
           <div>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-bold text-slate-200">当前最需要处理的任务</h3>
-              <button className="text-xs text-indigo-400 hover:text-indigo-300 flex items-center">
-                查看全部任务 <ChevronRight size={14} className="ml-1" />
-              </button>
-            </div>
+            <h3 className="text-sm font-bold text-slate-200 mb-4">当前最需要处理的任务</h3>
             <div className="bg-slate-900 border border-amber-500/30 rounded-xl p-6 shadow-xl relative overflow-hidden group">
               <div className="absolute top-0 left-0 w-1.5 h-full bg-amber-500"></div>
-              <div className="flex items-start justify-between mb-6">
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-3 flex-wrap gap-y-2">
-                    <h4 className="text-lg font-bold text-slate-100">发现 3 个语义冲突需要人工确认</h4>
-                    <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border bg-amber-500/10 text-amber-500 border-amber-500/20">FIELD_SEMANTIC_UNRESOLVED</span>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <span className="flex items-center text-[10px] text-red-400 font-bold uppercase tracking-wider">
-                      <ShieldAlert size={12} className="mr-1" /> 优先级: HIGH
-                    </span>
-                    <span className="w-px h-3 bg-slate-800"></span>
-                    <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">非阻塞交付</span>
-                  </div>
-                </div>
-                <span className="text-[10px] font-mono text-slate-600">TSK-2026-042</span>
-              </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">问题摘要</label>
-                    <p className="text-xs text-slate-300 leading-relaxed">
-                      <span className="text-indigo-400 font-mono">department_id</span>、<span className="text-indigo-400 font-mono">manager_id</span>、<span className="text-indigo-400 font-mono">salary_band</span> 存在语义冲突。
-                    </p>
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">原因摘要</label>
-                    <p className="text-xs text-slate-400 leading-relaxed italic">
-                      "Top1 与 Top2 候选差距过小，且部分元数据证据（如空值率）与历史推断不一致。"
-                    </p>
-                  </div>
+              <div className="flex items-center space-x-3 mb-4">
+                <span className="px-2 py-0.5 rounded text-[10px] font-mono uppercase tracking-wider border bg-slate-800 text-slate-300 border-slate-700">FIELD_SEMANTIC_UNRESOLVED</span>
+                <span className="flex items-center text-[10px] text-red-400 font-bold uppercase tracking-wider">
+                  <ShieldAlert size={12} className="mr-1" /> HIGH
+                </span>
+                <span className="text-[10px] text-slate-500 border border-slate-700 px-1.5 py-0.5 rounded">非阻塞</span>
+              </div>
+
+              <h4 className="text-lg font-bold text-slate-100 mb-6">发现 3 个语义冲突需要人工确认</h4>
+              
+              <div className="space-y-4 mb-8">
+                <div className="flex">
+                  <span className="text-xs font-bold text-slate-500 w-20 shrink-0 mt-0.5">问题摘要：</span>
+                  <p className="text-xs text-slate-300 leading-relaxed">
+                    <span className="text-indigo-400 font-mono">department_id</span>、<span className="text-indigo-400 font-mono">manager_id</span>、<span className="text-indigo-400 font-mono">salary_band</span> 存在语义冲突
+                  </p>
                 </div>
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">影响范围</label>
-                    <div className="flex flex-wrap gap-2">
-                      <span className="text-[10px] text-slate-400 bg-slate-800 px-2 py-0.5 rounded">候选对象生成</span>
-                      <span className="text-[10px] text-slate-400 bg-slate-800 px-2 py-0.5 rounded">质量规则草案</span>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">推荐动作</label>
-                    <div className="bg-indigo-500/5 border border-indigo-500/10 rounded-lg p-2.5">
-                      <p className="text-xs text-indigo-300/80">
-                        进入字段语义裁决抽屉，优先处理冲突字段，或批量进入冲突工作台。
-                      </p>
-                    </div>
-                  </div>
+                <div className="flex">
+                  <span className="text-xs font-bold text-slate-500 w-20 shrink-0 mt-0.5">原因摘要：</span>
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    Top1 与 Top2 候选差距过小，且部分元数据证据不一致
+                  </p>
+                </div>
+                <div className="flex">
+                  <span className="text-xs font-bold text-slate-500 w-20 shrink-0 mt-0.5">影响范围：</span>
+                  <p className="text-xs text-slate-300 leading-relaxed">
+                    候选对象生成、质量规则草案
+                  </p>
+                </div>
+                <div className="flex">
+                  <span className="text-xs font-bold text-slate-500 w-20 shrink-0 mt-0.5">推荐动作：</span>
+                  <p className="text-xs text-indigo-400 leading-relaxed">
+                    进入字段语义裁决，优先处理冲突字段
+                  </p>
                 </div>
               </div>
 
-              <div className="flex items-center justify-between pt-6 border-t border-slate-800">
-                <div className="flex space-x-3">
-                  <button className="px-6 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-lg transition-all shadow-lg shadow-indigo-500/20 flex items-center">
-                    <Zap size={14} className="mr-2" />
-                    立即处理
-                  </button>
-                  <button className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium rounded-lg transition-colors border border-slate-700">查看证据</button>
-                  <button className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium rounded-lg transition-colors border border-slate-700">批量处理</button>
-                </div>
-                <button className="text-xs text-slate-500 hover:text-slate-400 transition-colors">稍后提醒</button>
+              <div className="flex items-center space-x-3 pt-6 border-t border-slate-800">
+                <button className="px-6 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-lg transition-all shadow-lg shadow-indigo-500/20">
+                  立即处理
+                </button>
+                <button className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium rounded-lg transition-colors border border-slate-700">查看证据</button>
+                <button className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium rounded-lg transition-colors border border-slate-700">批量处理</button>
+                <button className="px-4 py-2 text-slate-500 hover:text-slate-400 text-xs transition-colors ml-auto">稍后提醒</button>
               </div>
+            </div>
+            
+            {/* 次任务简表 */}
+            <div className="mt-3 flex items-center justify-between px-2">
+              <div className="flex items-center space-x-4 text-xs text-slate-500">
+                <span className="font-medium text-slate-400">相关任务：</span>
+                <span className="flex items-center"><span className="w-1 h-1 rounded-full bg-slate-600 mr-1.5"></span>候选对象存在合并建议</span>
+                <span className="flex items-center"><span className="w-1 h-1 rounded-full bg-slate-600 mr-1.5"></span>12 个字段缺少业务描述</span>
+              </div>
+              <button className="text-xs text-indigo-400 hover:text-indigo-300">查看全部任务</button>
             </div>
           </div>
 
-          {/* D. 执行阶段摘要 */}
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-bold text-slate-200">执行阶段摘要 (Execution View)</h3>
-              <button className="text-xs text-slate-500 hover:text-slate-300 flex items-center">
-                <History size={14} className="mr-1" /> 运行历史
+          {/* D. 执行概览 (压缩版) */}
+          <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm">
+            <h3 className="text-sm font-bold text-slate-200 mb-4">执行概览</h3>
+            <div className="space-y-3">
+              <div className="flex text-sm">
+                <span className="text-slate-500 w-24 shrink-0">当前阶段：</span>
+                <span className="text-amber-400 font-medium">语义理解结果（软阻塞）</span>
+              </div>
+              <div className="flex text-sm">
+                <span className="text-slate-500 w-24 shrink-0">最近完成：</span>
+                <span className="text-slate-300">质量规则与检测</span>
+              </div>
+              <div className="flex text-sm">
+                <span className="text-slate-500 w-24 shrink-0">下一阶段：</span>
+                <span className="text-slate-400">候选对象生成</span>
+              </div>
+            </div>
+            <div className="mt-4 pt-4 border-t border-slate-800/50">
+              <button 
+                onClick={() => {
+                  setIsRightRailOpen(true);
+                  setRightTab('runs');
+                }}
+                className="text-xs text-indigo-400 hover:text-indigo-300 flex items-center transition-colors"
+              >
+                查看完整运行链路 <ChevronRight size={14} className="ml-1" />
               </button>
             </div>
-            <div className="flex space-x-4 overflow-x-auto pb-4 custom-scrollbar">
-              {STAGES.map(stage => (
-                <div key={stage.id} className="bg-slate-900 border border-slate-800 rounded-xl p-5 min-w-[280px] flex-shrink-0 flex flex-col hover:border-slate-700 transition-colors group">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center space-x-3">
-                      <div className={cn(
-                        "w-8 h-8 rounded-lg flex items-center justify-center border transition-colors",
-                        stage.status === 'COMPLETED' ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" :
-                        stage.status === 'SOFT_BLOCKED' ? "bg-amber-500/10 border-amber-500/20 text-amber-500" :
-                        stage.status === 'IN_PROGRESS' ? "bg-blue-500/10 border-blue-500/20 text-blue-400" :
-                        "bg-slate-800 border-slate-700 text-slate-500"
-                      )}>
-                        <stage.icon size={16} />
-                      </div>
-                      <div>
-                        <span className="text-[10px] text-slate-500 font-mono block">STAGE {stage.id}</span>
-                        <span className="text-sm font-bold text-slate-200">{stage.name}</span>
-                      </div>
-                    </div>
-                    <div className={cn(
-                      "w-2 h-2 rounded-full",
-                      stage.status === 'COMPLETED' ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" :
-                      stage.status === 'IN_PROGRESS' ? "bg-blue-500 animate-pulse shadow-[0_0_8px_rgba(59,130,246,0.5)]" :
-                      stage.status === 'SOFT_BLOCKED' ? "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]" :
-                      "bg-slate-700"
-                    )}></div>
-                  </div>
-                  <p className="text-xs text-slate-400 mb-6 line-clamp-2 flex-1 leading-relaxed">{stage.summary}</p>
-                  <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-800/50">
-                    <div className="flex space-x-2">
-                      {stage.metrics?.map((m, i) => (
-                        <div key={i} className="flex flex-col">
-                          <span className="text-[8px] text-slate-500 uppercase">{m.label}</span>
-                          <span className={cn(
-                            "text-[10px] font-mono font-bold",
-                            m.status === 'success' ? "text-emerald-400" : "text-slate-300"
-                          )}>{m.value}</span>
-                        </div>
-                      ))}
-                    </div>
-                    <button onClick={() => openStage(stage.id)} className="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-indigo-400 rounded-lg transition-colors">
-                      <ChevronRight size={16} />
-                    </button>
-                  </div>
-                </div>
-              ))}
+          </div>
+
+          {/* E. 最近事件 (默认 3 条) */}
+          <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm">
+            <h3 className="text-sm font-bold text-slate-200 mb-4">最近事件</h3>
+            <div className="space-y-4">
+              <div className="flex items-start space-x-3">
+                <span className="text-xs text-slate-500 font-mono mt-0.5">10:42</span>
+                <p className="text-sm text-slate-300">发现 3 个字段语义冲突，已生成待确认任务</p>
+              </div>
+              <div className="flex items-start space-x-3">
+                <span className="text-xs text-slate-500 font-mono mt-0.5">10:48</span>
+                <p className="text-sm text-slate-300">已生成候选对象清单（预览版）</p>
+              </div>
+              <div className="flex items-start space-x-3">
+                <span className="text-xs text-slate-500 font-mono mt-0.5">10:50</span>
+                <p className="text-sm text-slate-300">用户执行：批准执行计划</p>
+              </div>
+            </div>
+            <div className="mt-4 pt-4 border-t border-slate-800/50">
+              <button 
+                onClick={() => {
+                  // In a real app, this might open a history tab or modal
+                  console.log("Open history");
+                }}
+                className="text-xs text-indigo-400 hover:text-indigo-300 flex items-center transition-colors"
+              >
+                查看全过程 <ChevronRight size={14} className="ml-1" />
+              </button>
             </div>
           </div>
 
-          {/* E. 事件流 */}
-          <div>
-            <h3 className="text-sm font-bold text-slate-200 mb-4">事件流</h3>
-            <div className="space-y-6">
-              {messages.map((msg) => {
-                if (msg.type === 'user') {
-                  return (
-                    <div key={msg.id} className="flex space-x-3 max-w-[85%] ml-auto flex-row-reverse space-x-reverse">
-                      <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-1 bg-slate-700 text-slate-300">
-                        <User size={18} />
-                      </div>
-                      <div className="p-4 rounded-2xl text-sm leading-relaxed shadow-sm bg-indigo-600 text-white rounded-tr-sm">
-                        {msg.content}
-                      </div>
-                    </div>
-                  );
-                }
-
-                return (
-                  <div key={msg.id} className="flex space-x-3 max-w-[85%]">
-                    <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-1 bg-indigo-600 text-white shadow-lg shadow-indigo-900/20">
-                      <Bot size={18} />
-                    </div>
-                    <div className="flex-1 space-y-2 min-w-0">
-                      {msg.type === 'plan' && (
-                        <div className="bg-slate-900 border border-slate-800 rounded-2xl rounded-tl-sm p-5 shadow-sm max-w-md">
-                          <div className="flex items-center justify-between mb-4">
-                            <h4 className="text-sm font-bold text-slate-200 flex items-center">
-                              <Activity size={16} className="mr-2 text-indigo-400" />
-                              执行计划
-                            </h4>
-                            <div className="flex items-center space-x-1 text-[10px] text-slate-500">
-                              <Clock size={12} />
-                              <span>预计 15M</span>
-                            </div>
-                          </div>
-                          <div className="space-y-3 mb-4">
-                            {msg.stages?.map((stage, idx) => (
-                              <div 
-                                key={stage.id} 
-                                className="flex items-center space-x-3 group cursor-pointer"
-                                onClick={() => openStage(stage.id)}
-                              >
-                                <div className={cn(
-                                  "w-8 h-8 rounded-full flex items-center justify-center border text-xs shrink-0 transition-colors",
-                                  stage.status === 'COMPLETED' ? "bg-emerald-500/20 border-emerald-500 text-emerald-400" :
-                                  stage.status === 'IN_PROGRESS' ? "bg-blue-500/20 border-blue-500 text-blue-400" :
-                                  "bg-slate-800 border-slate-700 text-slate-500 group-hover:border-slate-500"
-                                )}>
-                                  {stage.status === 'COMPLETED' ? <CheckCircle2 size={14} /> : idx + 1}
-                                </div>
-                                <div className="flex-1 flex items-center justify-between bg-slate-950/50 border border-slate-800/50 rounded-xl px-4 py-3 hover:bg-slate-900 transition-colors">
-                                  <div className="flex flex-col">
-                                    <span className="text-sm font-medium text-slate-300">{stage.name}</span>
-                                    {idx === 0 && <span className="text-[10px] text-slate-500">扫描所选 4 张表的结构与元数据</span>}
-                                    {idx === 1 && <span className="text-[10px] text-slate-500">分析字段分布、空值率与唯一性</span>}
-                                  </div>
-                                  <ChevronRight size={14} className="text-slate-600 group-hover:text-slate-400 transition-colors" />
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                          <div className="flex items-center space-x-3 pt-3 border-t border-slate-800/50">
-                            <button 
-                              onClick={handleApprovePlan}
-                              className="flex-1 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium rounded transition-colors flex items-center justify-center"
-                            >
-                              <CheckCircle2 size={14} className="mr-1.5" />
-                              批准计划
-                            </button>
-                            <button 
-                              onClick={handleModifyConfig}
-                              className="flex-1 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium rounded transition-colors border border-slate-700 flex items-center justify-center"
-                            >
-                              <Settings size={14} className="mr-1.5" />
-                              修改配置
-                            </button>
-                          </div>
-                        </div>
-                      )}
-
-                      {msg.type === 'progress' && (
-                        <div className="bg-slate-900 border border-slate-800 rounded-2xl rounded-tl-sm p-4 shadow-sm flex items-start space-x-3">
-                          <div className={cn(
-                            "p-2 rounded-lg shrink-0",
-                            msg.status === 'COMPLETED' ? "bg-emerald-500/10 text-emerald-400" : "bg-blue-500/10 text-blue-400"
-                          )}>
-                            {msg.status === 'COMPLETED' ? <CheckCircle2 size={16} /> : <Activity size={16} className="animate-pulse" />}
-                          </div>
-                          <div className="flex-1">
-                            <div className="flex items-center justify-between mb-1">
-                              <div className="text-xs font-bold text-slate-400">阶段 {msg.stageId}: {msg.stageName}</div>
-                              {msg.status === 'COMPLETED' && (
-                                <button 
-                                  onClick={() => {
-                                    if (msg.stageId) openStage(msg.stageId);
-                                  }}
-                                  className="text-[10px] text-indigo-400 hover:text-indigo-300 flex items-center"
-                                >
-                                  查看详情 <ChevronRight size={12} className="ml-0.5" />
-                                </button>
-                              )}
-                            </div>
-                            <div className="text-sm text-slate-200">{msg.summary}</div>
-                            <div className="mt-3 flex space-x-2">
-                              <button className="text-[10px] px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded transition-colors">定位阶段</button>
-                              <button className="text-[10px] px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded transition-colors">重放</button>
-                              <button className="text-[10px] px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded transition-colors">附加说明</button>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      {msg.type === 'blocker' && (
-                        <div className={cn(
-                          "border rounded-2xl rounded-tl-sm p-4 shadow-sm flex items-start space-x-3",
-                          msg.blockerType === 'hard' ? "bg-red-500/5 border-red-500/20" : "bg-yellow-500/5 border-yellow-500/20"
-                        )}>
-                          <div className={cn(
-                            "p-2 rounded-lg shrink-0",
-                            msg.blockerType === 'hard' ? "bg-red-500/10 text-red-400" : "bg-yellow-500/10 text-yellow-500"
-                          )}>
-                            <AlertTriangle size={16} />
-                          </div>
-                          <div className="flex-1">
-                            <div className="flex items-center justify-between mb-1">
-                              <div className={cn(
-                                "text-xs font-bold",
-                                msg.blockerType === 'hard' ? "text-red-400" : "text-yellow-500"
-                              )}>
-                                {msg.blockerType === 'hard' ? '硬阻塞' : '软任务'}
-                              </div>
-                              <span className="text-[10px] font-mono text-slate-500">{msg.taskId}</span>
-                            </div>
-                            <div className="text-sm text-slate-200 mb-3">{msg.summary}</div>
-                            <div className="flex items-center space-x-2">
-                              <button 
-                                onClick={() => {
-                                  setIsRightRailOpen(true);
-                                  setRightTab('actions');
-                                }}
-                                className={cn(
-                                  "text-xs px-3 py-1.5 rounded-lg font-medium transition-colors",
-                                  msg.blockerType === 'hard' ? "bg-red-500/20 text-red-400 hover:bg-red-500/30" : "bg-yellow-500/20 text-yellow-500 hover:bg-yellow-500/30"
-                                )}
-                              >
-                                去处理 (Resolve)
-                              </button>
-                              <button 
-                                onClick={() => handleIgnoreBlocker(msg.taskId || '')}
-                                className="text-xs px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-300 rounded-lg font-medium transition-colors border border-slate-700"
-                              >
-                                忽略
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      {msg.type === 'result' && (
-                        <div className="bg-slate-900 border border-slate-800 rounded-2xl rounded-tl-sm p-4 shadow-sm">
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="text-xs font-bold text-slate-400">阶段 {msg.stageId} 结果摘要</div>
-                            <button 
-                              onClick={() => {
-                                if (msg.stageId) openStage(msg.stageId);
-                              }}
-                              className="text-[10px] text-indigo-400 hover:text-indigo-300 flex items-center"
-                            >
-                              查看详情 <ChevronRight size={12} className="ml-0.5" />
-                            </button>
-                          </div>
-                          <div className="text-sm text-slate-200">{msg.summary}</div>
-                        </div>
-                      )}
-
-                      {msg.type === 'deliverable' && (
-                        <div className="bg-slate-900 border border-slate-800 rounded-2xl rounded-tl-sm p-4 shadow-sm">
-                           <div className="flex items-center space-x-2 mb-3">
-                             <FileText size={16} className="text-indigo-400" />
-                             <span className="text-sm font-bold text-slate-200">交付物已生成</span>
-                           </div>
-                           <div className="space-y-2">
-                             {msg.deliverables?.map((d, i) => (
-                               <div key={i} className="flex items-center justify-between bg-slate-950 border border-slate-800 p-2 rounded-lg">
-                                 <span className="text-xs text-slate-300">{d.name}</span>
-                                 <button 
-                                   onClick={() => {
-                                     setIsRightRailOpen(true);
-                                     setRightTab('deliverables');
-                                   }}
-                                   className="text-[10px] text-indigo-400 hover:text-indigo-300 bg-indigo-500/10 px-2 py-1 rounded"
-                                 >
-                                   查看
-                                 </button>
-                               </div>
-                             ))}
-                           </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-              <div ref={chatEndRef} />
-            </div>
-          </div>
         </div>
 
-        {/* Composer (Input Area) */}
+        {/* F. 当前任务输入框 (固定底部，弱化) */}
         <div className="p-4 border-t border-slate-800 bg-slate-900/80 backdrop-blur-md sticky bottom-0 z-20">
-          <div className="max-w-4xl mx-auto space-y-4">
-            {/* Quick Action Chips */}
+          <div className="max-w-4xl mx-auto space-y-3">
+            {/* Quick Action Chips (Reduced to 2) */}
             <div className="flex flex-wrap gap-2">
-              {[
-                { label: '一键运行全流程', icon: PlayCircle, color: 'text-emerald-400' },
-                { label: '只跑扫描', icon: Search, color: 'text-blue-400' },
-                { label: '查看语义冲突', icon: ShieldAlert, color: 'text-amber-400' },
-                { label: '导出当前结果', icon: Download, color: 'text-slate-400' },
-              ].map((chip, idx) => (
-                <button
-                  key={idx}
-                  className="flex items-center space-x-1.5 px-3 py-1.5 bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 hover:border-slate-600 rounded-full text-xs font-medium text-slate-300 transition-all group"
-                >
-                  <chip.icon size={12} className={cn("group-hover:scale-110 transition-transform", chip.color)} />
-                  <span>{chip.label}</span>
-                </button>
-              ))}
+              <button className="flex items-center space-x-1.5 px-3 py-1.5 bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 hover:border-slate-600 rounded-full text-xs font-medium text-slate-300 transition-all">
+                <PlayCircle size={12} className="text-emerald-400" />
+                <span>继续执行</span>
+              </button>
+              <button className="flex items-center space-x-1.5 px-3 py-1.5 bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 hover:border-slate-600 rounded-full text-xs font-medium text-slate-300 transition-all">
+                <FileText size={12} className="text-indigo-400" />
+                <span>生成当前报告</span>
+              </button>
             </div>
 
             {/* Input Bar */}
             <div className="relative group">
-              <div className="absolute inset-0 bg-indigo-500/10 blur-xl rounded-2xl opacity-0 group-focus-within:opacity-100 transition-opacity"></div>
               <div className={cn(
-                "relative flex items-end space-x-3 p-3 bg-slate-950 border rounded-2xl transition-all shadow-2xl",
-                requestStatus === 'COMPLETED' ? "border-emerald-500/30 bg-emerald-500/5" :
-                requestStatus === 'PAUSED' ? "border-amber-500/30 bg-amber-500/5" :
+                "relative flex items-end space-x-3 p-2 bg-slate-950 border rounded-xl transition-all shadow-lg",
                 "border-slate-800 group-focus-within:border-indigo-500/50 group-focus-within:ring-1 group-focus-within:ring-indigo-500/20"
               )}>
                 <div className="flex-1 min-w-0">
-                  {requestStatus === 'COMPLETED' ? (
-                    <div className="py-2 px-1 flex items-center space-x-2 text-emerald-400">
-                      <CheckCircle2 size={16} />
-                      <span className="text-sm font-medium">任务已完成，你可以继续提问或发起新任务</span>
-                    </div>
-                  ) : requestStatus === 'PAUSED' ? (
-                    <div className="py-2 px-1 flex items-center space-x-2 text-amber-400">
-                      <Pause size={16} />
-                      <span className="text-sm font-medium">任务已暂停，等待你的指令</span>
-                    </div>
-                  ) : null}
                   <textarea
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
@@ -958,49 +657,26 @@ export default function AIOpsWorkbenchRequestDetail() {
                         handleSendMessage();
                       }
                     }}
-                    placeholder={requestStatus === 'IN_PROGRESS' ? "输入指令以微调当前执行..." : "继续对话或发起新指令..."}
-                    className="w-full bg-transparent border-none focus:ring-0 text-slate-200 placeholder-slate-500 text-sm py-2 resize-none max-h-32 custom-scrollbar"
+                    placeholder="继续在当前任务中输入，例如：只重跑语义理解，或生成本次阶段报告..."
+                    className="w-full bg-transparent border-none focus:ring-0 text-slate-200 placeholder-slate-500 text-sm py-1.5 px-2 resize-none max-h-24 custom-scrollbar"
                     rows={1}
                   />
                 </div>
-                <div className="flex items-center space-x-2 pb-1">
-                  {requestStatus === 'IN_PROGRESS' && (
-                    <button 
-                      onClick={() => setRequestStatus('PAUSED')}
-                      className="p-2 text-slate-400 hover:text-amber-400 hover:bg-amber-500/10 rounded-xl transition-all"
-                      title="暂停执行"
-                    >
-                      <Pause size={20} />
-                    </button>
-                  )}
-                  {requestStatus === 'PAUSED' && (
-                    <button 
-                      onClick={() => setRequestStatus('IN_PROGRESS')}
-                      className="p-2 text-slate-400 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-xl transition-all"
-                      title="恢复执行"
-                    >
-                      <PlayCircle size={20} />
-                    </button>
-                  )}
+                <div className="flex items-center pb-0.5 pr-0.5">
                   <button 
                     onClick={handleSendMessage}
                     disabled={!input.trim()}
                     className={cn(
-                      "p-2 rounded-xl transition-all shadow-lg",
+                      "p-1.5 rounded-lg transition-all",
                       input.trim() 
-                        ? "bg-indigo-600 text-white hover:bg-indigo-500 hover:scale-105 active:scale-95" 
+                        ? "bg-indigo-600 text-white hover:bg-indigo-500" 
                         : "bg-slate-800 text-slate-500 cursor-not-allowed"
                     )}
                   >
-                    <Send size={20} />
+                    <Send size={16} />
                   </button>
                 </div>
               </div>
-            </div>
-            <div className="flex items-center justify-center space-x-4 text-[10px] text-slate-500">
-              <span className="flex items-center"><Zap size={10} className="mr-1 text-amber-500" /> 响应速度: 极快</span>
-              <span className="flex items-center"><ShieldCheck size={10} className="mr-1 text-emerald-500" /> 安全审计: 已开启</span>
-              <span className="flex items-center"><BrainCircuit size={10} className="mr-1 text-indigo-500" /> 模型: Gemini 3.1 Pro</span>
             </div>
           </div>
         </div>
@@ -1113,7 +789,12 @@ export default function AIOpsWorkbenchRequestDetail() {
                               <span className="text-[10px] text-slate-500">{s.time}</span>
                             </div>
                             <div className="mt-1 flex items-center space-x-2">
-                              <button className="text-[10px] text-indigo-400 hover:text-indigo-300">查看详情</button>
+                              <button 
+                                onClick={() => openStage(s.stage)}
+                                className="text-[10px] text-indigo-400 hover:text-indigo-300"
+                              >
+                                查看详情
+                              </button>
                               {s.status === 'SOFT_BLOCKED' && <button className="text-[10px] text-amber-400 hover:text-amber-300">重试</button>}
                             </div>
                           </div>

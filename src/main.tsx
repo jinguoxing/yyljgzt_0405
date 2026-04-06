@@ -14,6 +14,7 @@ import AIOpsEmployeeDetail from './pages/AIOpsEmployeeDetail';
 import AIOpsTasks from './pages/AIOpsTasks';
 import AIOpsWorkbench from './pages/AIOpsWorkbench';
 import AIOpsWorkbenchRequestDetail from './pages/AIOpsWorkbenchRequestDetail';
+import FindDataTaskDetail from './pages/FindDataTaskDetail';
 import AIOpsEmployeeWorkbench from './pages/AIOpsEmployeeWorkbench';
 import AIOpsRuns from './pages/AIOpsRuns';
 import AIOpsReplay from './pages/AIOpsReplay';
@@ -62,6 +63,7 @@ createRoot(document.getElementById('root')!).render(
           <Route path="workbench" element={<AIOpsWorkbench />} />
           <Route path="workbench/requests/:requestId" element={<AIOpsWorkbenchRequestDetail />} />
           <Route path="workbench/requests/:requestId/stages/:stageId" element={<AIOpsWorkbenchRequestDetail />} />
+          <Route path="workbench/find-data/:taskId" element={<FindDataTaskDetail />} />
           <Route path="employee-workbench" element={<AIOpsEmployeeWorkbench />} />
           <Route path="employees" element={<AIOpsEmployees />} />
           <Route path="employees/new" element={<AIOpsEmployeeCreate />} />

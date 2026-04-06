@@ -12,6 +12,7 @@ import AIOpsWorkbenchRequestCreateModal from '@/components/AIOpsWorkbenchRequest
 import AIOpsTemplateLibraryModal from '@/components/AIOpsTemplateLibraryModal';
 
 const MOCK_TASKS = [
+  { id: 'TASK-20260406-001', title: '寻找近30天订单 GMV 分析数据', status: 'COMPLETED', category: '最近完成', type: '找数', blockers: { hard: 0, soft: 0 }, lastUpdated: '10 分钟前更新' },
   { id: 'REQ-20260227-001', title: '解析 HR 域表结构与语义', status: 'RUNNING', category: '进行中', type: '语义治理', blockers: { hard: 0, soft: 3 }, lastUpdated: '10 分钟前更新' },
   { id: 'REQ-20260226-042', title: '确认 Sales 数据血缘', status: 'PENDING', category: '待确认', type: '血缘分析', blockers: { hard: 0, soft: 1 }, lastUpdated: '2 小时前更新' },
   { id: 'REQ-20260225-089', title: '生成财务指标定义', status: 'BLOCKED', category: '阻塞中', type: '指标生成', blockers: { hard: 1, soft: 0 }, lastUpdated: '1 天前更新' },
@@ -212,7 +213,7 @@ export default function AIOpsWorkbench() {
                               {/* Dropdown Menu */}
                               {dropdownOpenId === task.id && (
                                 <div className="absolute right-2 top-8 w-32 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-50 py-1 overflow-hidden" onClick={(e) => e.stopPropagation()}>
-                                  <button onClick={() => navigate(`/aiops/workbench/requests/${task.id}`)} className="w-full text-left px-3 py-2 text-xs text-slate-300 hover:bg-slate-700 hover:text-white transition-colors flex items-center"><ExternalLink size={12} className="mr-2"/> 查看详情</button>
+                                  <button onClick={() => navigate(task.type === '找数' ? `/aiops/workbench/find-data/${task.id}` : `/aiops/workbench/requests/${task.id}`)} className="w-full text-left px-3 py-2 text-xs text-slate-300 hover:bg-slate-700 hover:text-white transition-colors flex items-center"><ExternalLink size={12} className="mr-2"/> 查看详情</button>
                                   <button onClick={() => setDropdownOpenId(null)} className="w-full text-left px-3 py-2 text-xs text-slate-300 hover:bg-slate-700 hover:text-white transition-colors flex items-center"><Play size={12} className="mr-2"/> 重新运行</button>
                                   <button onClick={() => setDropdownOpenId(null)} className="w-full text-left px-3 py-2 text-xs text-slate-300 hover:bg-slate-700 hover:text-white transition-colors flex items-center"><Archive size={12} className="mr-2"/> 归档</button>
                                   <div className="h-px bg-slate-700 my-1"></div>
@@ -357,7 +358,10 @@ export default function AIOpsWorkbench() {
                   </div>
                   <div className="flex items-center space-x-3">
                     <button 
-                      onClick={() => navigate(`/aiops/workbench/requests/${activeTaskId}`)}
+                      onClick={() => {
+                        const activeTask = MOCK_TASKS.find(t => t.id === activeTaskId);
+                        navigate(activeTask?.type === '找数' ? `/aiops/workbench/find-data/${activeTaskId}` : `/aiops/workbench/requests/${activeTaskId}`);
+                      }}
                       className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-lg shadow-indigo-900/20"
                     >
                       进入详情
@@ -424,7 +428,10 @@ export default function AIOpsWorkbench() {
                       <div className="flex items-center justify-between pt-3 border-t border-slate-800/50">
                         <span className="text-xs text-indigo-400">推荐动作：进入字段语义裁决</span>
                         <button 
-                          onClick={() => navigate(`/aiops/workbench/requests/${activeTaskId}`)}
+                          onClick={() => {
+                            const activeTask = MOCK_TASKS.find(t => t.id === activeTaskId);
+                            navigate(activeTask?.type === '找数' ? `/aiops/workbench/find-data/${activeTaskId}` : `/aiops/workbench/requests/${activeTaskId}`);
+                          }}
                           className="text-xs bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded transition-colors"
                         >
                           立即处理
@@ -445,7 +452,10 @@ export default function AIOpsWorkbench() {
                       <div className="flex items-center justify-between pt-3 border-t border-slate-800/50">
                         <span className="text-xs text-indigo-400">推荐动作：进入对象合并对比</span>
                         <button 
-                          onClick={() => navigate(`/aiops/workbench/requests/${activeTaskId}`)}
+                          onClick={() => {
+                            const activeTask = MOCK_TASKS.find(t => t.id === activeTaskId);
+                            navigate(activeTask?.type === '找数' ? `/aiops/workbench/find-data/${activeTaskId}` : `/aiops/workbench/requests/${activeTaskId}`);
+                          }}
                           className="text-xs bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded transition-colors"
                         >
                           立即处理
@@ -466,7 +476,10 @@ export default function AIOpsWorkbench() {
                   </h3>
                   <div className="flex flex-wrap gap-3">
                     <button 
-                      onClick={() => navigate(`/aiops/workbench/requests/${activeTaskId}`)}
+                      onClick={() => {
+                        const activeTask = MOCK_TASKS.find(t => t.id === activeTaskId);
+                        navigate(activeTask?.type === '找数' ? `/aiops/workbench/find-data/${activeTaskId}` : `/aiops/workbench/requests/${activeTaskId}`);
+                      }}
                       className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center"
                     >
                       进入详情继续处理 <ChevronRight size={16} className="ml-1" />

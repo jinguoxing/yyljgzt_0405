@@ -11,12 +11,21 @@ import {
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
 
+const FIND_DATA_STAGES = [
+  { stage: '1', name: '意图解析', status: 'COMPLETED', time: '1.2s', icon: Brain },
+  { stage: '2', name: '槽位补齐', status: 'COMPLETED', time: '0.8s', icon: Filter },
+  { stage: '3', name: '对象召回', status: 'COMPLETED', time: '2.4s', icon: Layers },
+  { stage: '4', name: '指标匹配', status: 'COMPLETED', time: '1.5s', icon: BarChart2 },
+  { stage: '5', name: '模板选择', status: 'COMPLETED', time: '0.5s', icon: Table },
+];
+
 export default function FindDataTaskDetail() {
   const [isLeftRailOpen, setIsLeftRailOpen] = useState(true);
   const [isRightRailOpen, setIsRightRailOpen] = useState(true);
   const [rightTab, setRightTab] = useState<'runs' | 'actions' | 'deliverables' | 'replay'>('runs');
   const [requestStatus, setRequestStatus] = useState<'IN_PROGRESS' | 'PAUSED' | 'COMPLETED'>('COMPLETED');
   const [input, setInput] = useState('');
+  const [selectedStageId, setSelectedStageId] = useState<string | null>(null);
 
   const chatEndRef = useRef<HTMLDivElement>(null);
 
@@ -488,13 +497,7 @@ export default function FindDataTaskDetail() {
                     <div className="space-y-4">
                       <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider px-1">执行链路 (Stepper)</h4>
                       <div className="space-y-0 pl-2">
-                        {[
-                          { stage: '1', name: '意图解析', status: 'COMPLETED', time: '1.2s' },
-                          { stage: '2', name: '槽位补齐', status: 'COMPLETED', time: '0.8s' },
-                          { stage: '3', name: '对象召回', status: 'COMPLETED', time: '2.4s' },
-                          { stage: '4', name: '指标匹配', status: 'COMPLETED', time: '1.5s' },
-                          { stage: '5', name: '模板选择', status: 'COMPLETED', time: '0.5s' },
-                        ].map((s, idx, arr) => (
+                        {FIND_DATA_STAGES.map((s, idx, arr) => (
                           <div key={s.stage} className="relative flex items-start space-x-4 pb-6">
                             {idx !== arr.length - 1 && (
                               <div className="absolute left-[11px] top-7 w-0.5 h-full bg-emerald-500/30"></div>
@@ -510,6 +513,14 @@ export default function FindDataTaskDetail() {
                               <div className="flex items-center justify-between">
                                 <span className="text-xs font-medium text-slate-200">{s.name}</span>
                                 <span className="text-[10px] text-slate-500">{s.time}</span>
+                              </div>
+                              <div className="mt-1 flex items-center space-x-2">
+                                <button 
+                                  onClick={() => setSelectedStageId(s.stage)}
+                                  className="text-[10px] text-indigo-400 hover:text-indigo-300"
+                                >
+                                  查看详情
+                                </button>
                               </div>
                             </div>
                           </div>
@@ -603,6 +614,314 @@ export default function FindDataTaskDetail() {
           )}
         </AnimatePresence>
       </div>
+
+      {/* Stage Detail Drawer */}
+      <AnimatePresence>
+        {selectedStageId && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedStageId(null)}
+              className="absolute inset-0 bg-slate-950/40 backdrop-blur-[2px] z-40"
+            />
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="absolute top-0 right-0 bottom-0 w-[500px] bg-slate-900 border-l border-slate-800 shadow-2xl z-50 flex flex-col"
+            >
+              <div className="h-14 border-b border-slate-800 flex items-center justify-between px-6 shrink-0 bg-slate-950/50">
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 rounded bg-indigo-500/20 text-indigo-400 flex items-center justify-center">
+                    {FIND_DATA_STAGES.find(s => s.stage === selectedStageId)?.icon && React.createElement(FIND_DATA_STAGES.find(s => s.stage === selectedStageId)!.icon, { size: 16 })}
+                  </div>
+                  <h2 className="text-base font-bold text-slate-100">
+                    阶段 {selectedStageId}: {FIND_DATA_STAGES.find(s => s.stage === selectedStageId)?.name}
+                  </h2>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="flex items-center bg-slate-900 border border-slate-800 rounded-lg overflow-hidden">
+                    <button 
+                      onClick={() => {
+                        const currentIndex = FIND_DATA_STAGES.findIndex(s => s.stage === selectedStageId);
+                        if (currentIndex > 0) setSelectedStageId(FIND_DATA_STAGES[currentIndex - 1].stage);
+                      }}
+                      disabled={FIND_DATA_STAGES.findIndex(s => s.stage === selectedStageId) <= 0}
+                      className="p-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                      title="上一个阶段"
+                    >
+                      <ChevronLeft size={16} />
+                    </button>
+                    <div className="w-px h-4 bg-slate-800"></div>
+                    <button 
+                      onClick={() => {
+                        const currentIndex = FIND_DATA_STAGES.findIndex(s => s.stage === selectedStageId);
+                        if (currentIndex < FIND_DATA_STAGES.length - 1) setSelectedStageId(FIND_DATA_STAGES[currentIndex + 1].stage);
+                      }}
+                      disabled={FIND_DATA_STAGES.findIndex(s => s.stage === selectedStageId) >= FIND_DATA_STAGES.length - 1}
+                      className="p-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                      title="下一个阶段"
+                    >
+                      <ChevronRight size={16} />
+                    </button>
+                  </div>
+                  <div className="w-px h-4 bg-slate-800 mx-1"></div>
+                  <button 
+                    onClick={() => setSelectedStageId(null)}
+                    className="p-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-lg transition-colors"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+              </div>
+              
+              <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
+                {selectedStageId === '1' && (
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between bg-slate-950/50 p-4 rounded-xl border border-slate-800/50">
+                      <div>
+                        <h3 className="text-sm font-bold text-slate-200">Stage 1 - 意图解析</h3>
+                        <p className="text-xs text-slate-500 mt-1">最后更新: 10分钟前</p>
+                      </div>
+                      <span className="px-2.5 py-1 bg-emerald-500/10 text-emerald-400 text-xs font-bold rounded border border-emerald-500/20 flex items-center">
+                        <CheckCircle2 size={14} className="mr-1.5" />
+                        COMPLETED
+                      </span>
+                    </div>
+                    
+                    <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+                      <div className="px-4 py-3 border-b border-slate-800 bg-slate-950/50">
+                        <h4 className="text-sm font-bold text-slate-300">解析结果</h4>
+                      </div>
+                      <div className="p-4 space-y-4">
+                        <div>
+                          <div className="text-xs text-slate-500 mb-1">原始输入</div>
+                          <div className="text-sm text-slate-300 bg-slate-950 p-3 rounded-lg border border-slate-800/50">
+                            寻找近30天订单 GMV 分析数据
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-xs text-slate-500 mb-1">匹配意图模板</div>
+                          <div className="text-sm font-mono text-indigo-400 bg-indigo-500/10 px-2 py-1 rounded inline-block border border-indigo-500/20">
+                            Order_GMV_Analysis
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-xs text-slate-500 mb-1">置信度</div>
+                          <div className="text-sm font-medium text-emerald-400">98%</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {selectedStageId === '2' && (
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between bg-slate-950/50 p-4 rounded-xl border border-slate-800/50">
+                      <div>
+                        <h3 className="text-sm font-bold text-slate-200">Stage 2 - 槽位补齐</h3>
+                        <p className="text-xs text-slate-500 mt-1">最后更新: 10分钟前</p>
+                      </div>
+                      <span className="px-2.5 py-1 bg-emerald-500/10 text-emerald-400 text-xs font-bold rounded border border-emerald-500/20 flex items-center">
+                        <CheckCircle2 size={14} className="mr-1.5" />
+                        COMPLETED
+                      </span>
+                    </div>
+                    
+                    <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+                      <div className="px-4 py-3 border-b border-slate-800 bg-slate-950/50">
+                        <h4 className="text-sm font-bold text-slate-300">提取的槽位 (Slots)</h4>
+                      </div>
+                      <div className="p-4">
+                        <table className="w-full text-left text-xs">
+                          <thead className="text-slate-500 border-b border-slate-800">
+                            <tr>
+                              <th className="pb-2 font-medium">槽位名</th>
+                              <th className="pb-2 font-medium">提取值</th>
+                              <th className="pb-2 font-medium">来源</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-800/50 text-slate-300">
+                            <tr>
+                              <td className="py-2 font-mono text-indigo-400">time_range</td>
+                              <td className="py-2">近30天</td>
+                              <td className="py-2 text-slate-500">用户输入</td>
+                            </tr>
+                            <tr>
+                              <td className="py-2 font-mono text-indigo-400">subject</td>
+                              <td className="py-2">订单</td>
+                              <td className="py-2 text-slate-500">用户输入</td>
+                            </tr>
+                            <tr>
+                              <td className="py-2 font-mono text-indigo-400">metric</td>
+                              <td className="py-2">GMV</td>
+                              <td className="py-2 text-slate-500">用户输入</td>
+                            </tr>
+                            <tr>
+                              <td className="py-2 font-mono text-indigo-400">domain</td>
+                              <td className="py-2">零售</td>
+                              <td className="py-2 text-slate-500">上下文推断</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {selectedStageId === '3' && (
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between bg-slate-950/50 p-4 rounded-xl border border-slate-800/50">
+                      <div>
+                        <h3 className="text-sm font-bold text-slate-200">Stage 3 - 对象召回</h3>
+                        <p className="text-xs text-slate-500 mt-1">最后更新: 10分钟前</p>
+                      </div>
+                      <span className="px-2.5 py-1 bg-emerald-500/10 text-emerald-400 text-xs font-bold rounded border border-emerald-500/20 flex items-center">
+                        <CheckCircle2 size={14} className="mr-1.5" />
+                        COMPLETED
+                      </span>
+                    </div>
+                    
+                    <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+                      <div className="px-4 py-3 border-b border-slate-800 bg-slate-950/50">
+                        <h4 className="text-sm font-bold text-slate-300">召回结果</h4>
+                      </div>
+                      <div className="p-4 space-y-3">
+                        <div className="flex justify-between items-center text-xs text-slate-400 mb-2">
+                          <span>共召回 3 个候选对象</span>
+                          <span>耗时: 2.4s</span>
+                        </div>
+                        <div className="bg-slate-950 border border-emerald-500/30 rounded-lg p-3">
+                          <div className="flex justify-between items-start mb-1">
+                            <span className="text-sm font-medium text-slate-200">Order</span>
+                            <span className="text-xs font-mono text-emerald-400">Score: 0.94</span>
+                          </div>
+                          <div className="text-xs text-slate-500">零售域核心订单对象，包含 GMV 指标。</div>
+                        </div>
+                        <div className="bg-slate-950 border border-slate-800/50 rounded-lg p-3 opacity-70">
+                          <div className="flex justify-between items-start mb-1">
+                            <span className="text-sm font-medium text-slate-200">Order_Archive</span>
+                            <span className="text-xs font-mono text-slate-400">Score: 0.65</span>
+                          </div>
+                          <div className="text-xs text-slate-500">历史归档订单对象，不适合近30天分析。</div>
+                        </div>
+                        <div className="bg-slate-950 border border-slate-800/50 rounded-lg p-3 opacity-70">
+                          <div className="flex justify-between items-start mb-1">
+                            <span className="text-sm font-medium text-slate-200">Refund_Order</span>
+                            <span className="text-xs font-mono text-slate-400">Score: 0.42</span>
+                          </div>
+                          <div className="text-xs text-slate-500">退款订单对象，指标不完全匹配。</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {selectedStageId === '4' && (
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between bg-slate-950/50 p-4 rounded-xl border border-slate-800/50">
+                      <div>
+                        <h3 className="text-sm font-bold text-slate-200">Stage 4 - 指标匹配</h3>
+                        <p className="text-xs text-slate-500 mt-1">最后更新: 10分钟前</p>
+                      </div>
+                      <span className="px-2.5 py-1 bg-emerald-500/10 text-emerald-400 text-xs font-bold rounded border border-emerald-500/20 flex items-center">
+                        <CheckCircle2 size={14} className="mr-1.5" />
+                        COMPLETED
+                      </span>
+                    </div>
+                    
+                    <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+                      <div className="px-4 py-3 border-b border-slate-800 bg-slate-950/50">
+                        <h4 className="text-sm font-bold text-slate-300">指标匹配详情</h4>
+                      </div>
+                      <div className="p-4 space-y-4">
+                        <div>
+                          <div className="text-xs text-slate-500 mb-1">目标指标</div>
+                          <div className="text-sm font-medium text-slate-200">GMV</div>
+                        </div>
+                        <div>
+                          <div className="text-xs text-slate-500 mb-2">匹配结果</div>
+                          <div className="bg-slate-950 border border-emerald-500/30 rounded-lg p-3">
+                            <div className="flex justify-between items-start mb-2">
+                              <span className="text-sm font-bold text-slate-200">GMV (总交易额)</span>
+                              <span className="text-xs font-mono text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
+                                98% 匹配
+                              </span>
+                            </div>
+                            <div className="text-xs text-slate-400 space-y-1">
+                              <div><span className="text-slate-500">所属对象:</span> Order</div>
+                              <div><span className="text-slate-500">口径:</span> 标准 (含退款)</div>
+                              <div><span className="text-slate-500">状态:</span> 已发布</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {selectedStageId === '5' && (
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between bg-slate-950/50 p-4 rounded-xl border border-slate-800/50">
+                      <div>
+                        <h3 className="text-sm font-bold text-slate-200">Stage 5 - 模板选择</h3>
+                        <p className="text-xs text-slate-500 mt-1">最后更新: 10分钟前</p>
+                      </div>
+                      <span className="px-2.5 py-1 bg-emerald-500/10 text-emerald-400 text-xs font-bold rounded border border-emerald-500/20 flex items-center">
+                        <CheckCircle2 size={14} className="mr-1.5" />
+                        COMPLETED
+                      </span>
+                    </div>
+                    
+                    <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+                      <div className="px-4 py-3 border-b border-slate-800 bg-slate-950/50">
+                        <h4 className="text-sm font-bold text-slate-300">推荐模板</h4>
+                      </div>
+                      <div className="p-4 space-y-4">
+                        <div className="bg-slate-950 border border-amber-500/30 rounded-lg p-3">
+                          <div className="flex justify-between items-start mb-2">
+                            <span className="text-sm font-mono font-bold text-slate-200">dwd_trade_order_df</span>
+                            <span className="text-xs font-mono text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
+                              最优推荐
+                            </span>
+                          </div>
+                          <div className="text-xs text-slate-400 space-y-1">
+                            <div><span className="text-slate-500">类型:</span> Hive / 离线</div>
+                            <div><span className="text-slate-500">更新频率:</span> T+1 (02:00)</div>
+                            <div><span className="text-slate-500">分区字段:</span> ds</div>
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <div className="text-xs text-slate-500 mb-2">生成 SQL 预览</div>
+                          <div className="bg-slate-950 p-3 rounded-lg border border-slate-800/50 overflow-x-auto">
+                            <pre className="text-[10px] font-mono text-indigo-300">
+{`SELECT 
+  ds as record_date,
+  SUM(total_amount) as gmv
+FROM 
+  retail.dwd_trade_order_df
+WHERE 
+  ds >= date_sub(current_date(), 30)
+GROUP BY 
+  ds
+ORDER BY 
+  ds DESC;`}
+                            </pre>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

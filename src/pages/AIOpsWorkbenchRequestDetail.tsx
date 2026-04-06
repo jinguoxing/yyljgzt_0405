@@ -6,7 +6,7 @@ import {
   Clock, Activity, AlertTriangle, CheckCircle2, ChevronRight,
   PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, Send, Bot, User, Plus,
   RotateCcw, XCircle, ExternalLink, Download, Box, Play, ArrowUpCircle, Info,
-  Share2, ChevronLeft, Zap, Pause, RefreshCw, MoreVertical, History, FileSearch, GitCompare, Layers, ShieldAlert, ListTodo, Package, ChevronDown
+  Share2, ChevronLeft, Zap, Pause, RefreshCw, MoreVertical, History, FileSearch, GitCompare, Layers, ShieldAlert, ListTodo, Package, ChevronDown, ChevronUp, Paperclip, Mic
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
@@ -78,6 +78,7 @@ export default function AIOpsWorkbenchRequestDetail() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [rightTab, setRightTab] = useState('runs');
   const [isGateExpanded, setIsGateExpanded] = useState(false);
+  const [isSystemUnderstandingExpanded, setIsSystemUnderstandingExpanded] = useState(false);
   const [isMoreActionsOpen, setIsMoreActionsOpen] = useState(false);
   
   const [messages, setMessages] = useState<Message[]>([
@@ -90,10 +91,17 @@ export default function AIOpsWorkbenchRequestDetail() {
   ]);
   const [input, setInput] = useState('');
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   
   const [isFieldDrawerOpen, setIsFieldDrawerOpen] = useState(false);
   const [selectedField, setSelectedField] = useState('');
   const [requestStatus, setRequestStatus] = useState<'IN_PROGRESS' | 'PAUSED' | 'COMPLETED'>('IN_PROGRESS');
+  
+  const [recentEvents, setRecentEvents] = useState([
+    { id: '1', time: '10:42', content: '发现 3 个字段语义冲突，已生成待确认任务' },
+    { id: '2', time: '10:48', content: '已生成候选对象清单（预览版）' },
+    { id: '3', time: '10:50', content: '用户执行：批准执行计划' },
+  ]);
 
   useEffect(() => {
     if (location.pathname.includes('/stages/')) {
@@ -102,8 +110,21 @@ export default function AIOpsWorkbenchRequestDetail() {
   }, [location.pathname]);
 
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    if (isRightRailOpen && rightTab === 'history') {
+      // Small delay to ensure DOM is updated after opening rail/tab
+      setTimeout(() => {
+        chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    }
+  }, [messages, isRightRailOpen, rightTab]);
+
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      const scrollHeight = textareaRef.current.scrollHeight;
+      textareaRef.current.style.height = `${Math.min(scrollHeight, 120)}px`;
+    }
+  }, [input]);
 
   const closeDrawer = () => {
     navigate(`/aiops/workbench/requests/${requestId}`);
@@ -115,9 +136,33 @@ export default function AIOpsWorkbenchRequestDetail() {
 
   const handleSendMessage = () => {
     if (!input.trim()) return;
+    
+    const now = new Date();
+    const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+    
+    // Add user message
     setMessages(prev => [...prev, { id: Date.now().toString(), type: 'user', role: 'user', content: input }]);
+    
+    // Add to recent events
+    setRecentEvents(prev => {
+      const newEvents = [...prev, { id: Date.now().toString(), time: timeStr, content: `用户输入：${input}` }];
+      return newEvents.slice(-3); // Keep only the last 3 events
+    });
+    
     setInput('');
+    
+    // Reset textarea height
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+    }
+
+    // Open right rail to show chat history
+    setIsRightRailOpen(true);
+    setRightTab('history');
+
+    // Simulate AI response
     setTimeout(() => {
+      const aiTimeStr = `${new Date().getHours().toString().padStart(2, '0')}:${new Date().getMinutes().toString().padStart(2, '0')}`;
       setMessages(prev => [...prev, { 
         id: Date.now().toString(), 
         type: 'progress', 
@@ -127,6 +172,10 @@ export default function AIOpsWorkbenchRequestDetail() {
         status: 'IN_PROGRESS',
         summary: '收到您的反馈，已调整推断策略，正在重新生成...' 
       }]);
+      setRecentEvents(prev => {
+        const newEvents = [...prev, { id: Date.now().toString(), time: aiTimeStr, content: 'AI 正在重新生成语义理解结果...' }];
+        return newEvents.slice(-3);
+      });
     }, 1000);
   };
 
@@ -438,9 +487,45 @@ export default function AIOpsWorkbenchRequestDetail() {
               </div>
             </div>
 
+            <AnimatePresence>
+              {isSystemUnderstandingExpanded && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  className="overflow-hidden"
+                >
+                  <div className="pt-4 mt-4 border-t border-slate-800/50 space-y-4">
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-400 mb-2">上下文依赖</h4>
+                      <ul className="list-disc list-inside text-sm text-slate-300 space-y-1">
+                        <li>依赖 <span className="font-mono text-indigo-400 text-xs">hr_core_db</span> 数据库访问权限</li>
+                        <li>依赖企业内部词典 (Enterprise Dictionary v2.1)</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-400 mb-2">预期产出物</h4>
+                      <ul className="list-disc list-inside text-sm text-slate-300 space-y-1">
+                        <li>字段级语义标签 (Semantic Tags)</li>
+                        <li>表级实体定义草案 (Entity Draft)</li>
+                        <li>数据质量检测报告 (Data Quality Report)</li>
+                      </ul>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             <div className="mt-4 pt-4 border-t border-slate-800/50">
-              <button className="text-xs text-indigo-400 hover:text-indigo-300 flex items-center transition-colors">
-                <ChevronDown size={14} className="mr-1" /> 展开完整理解
+              <button 
+                onClick={() => setIsSystemUnderstandingExpanded(!isSystemUnderstandingExpanded)}
+                className="text-xs text-indigo-400 hover:text-indigo-300 flex items-center transition-colors"
+              >
+                {isSystemUnderstandingExpanded ? (
+                  <><ChevronUp size={14} className="mr-1" /> 收起完整理解</>
+                ) : (
+                  <><ChevronDown size={14} className="mr-1" /> 展开完整理解</>
+                )}
               </button>
             </div>
           </div>
@@ -568,17 +653,32 @@ export default function AIOpsWorkbenchRequestDetail() {
           <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm">
             <h3 className="text-sm font-bold text-slate-200 mb-4">执行概览</h3>
             <div className="space-y-3">
-              <div className="flex text-sm">
-                <span className="text-slate-500 w-24 shrink-0">当前阶段：</span>
-                <span className="text-amber-400 font-medium">语义理解结果（软阻塞）</span>
+              <div className="flex text-sm items-center justify-between">
+                <div className="flex">
+                  <span className="text-slate-500 w-24 shrink-0">当前阶段：</span>
+                  <span className="text-amber-400 font-medium">语义理解结果（软阻塞）</span>
+                </div>
+                <button onClick={() => openStage('D')} className="text-xs text-indigo-400 hover:text-indigo-300 flex items-center">
+                  查看详情 <ChevronRight size={12} className="ml-0.5" />
+                </button>
               </div>
-              <div className="flex text-sm">
-                <span className="text-slate-500 w-24 shrink-0">最近完成：</span>
-                <span className="text-slate-300">质量规则与检测</span>
+              <div className="flex text-sm items-center justify-between">
+                <div className="flex">
+                  <span className="text-slate-500 w-24 shrink-0">最近完成：</span>
+                  <span className="text-slate-300">质量规则与检测</span>
+                </div>
+                <button onClick={() => openStage('C')} className="text-xs text-indigo-400 hover:text-indigo-300 flex items-center">
+                  查看详情 <ChevronRight size={12} className="ml-0.5" />
+                </button>
               </div>
-              <div className="flex text-sm">
-                <span className="text-slate-500 w-24 shrink-0">下一阶段：</span>
-                <span className="text-slate-400">候选对象生成</span>
+              <div className="flex text-sm items-center justify-between">
+                <div className="flex">
+                  <span className="text-slate-500 w-24 shrink-0">下一阶段：</span>
+                  <span className="text-slate-400">候选对象生成</span>
+                </div>
+                <button onClick={() => openStage('E')} className="text-xs text-indigo-400 hover:text-indigo-300 flex items-center">
+                  查看详情 <ChevronRight size={12} className="ml-0.5" />
+                </button>
               </div>
             </div>
             <div className="mt-4 pt-4 border-t border-slate-800/50">
@@ -598,24 +698,25 @@ export default function AIOpsWorkbenchRequestDetail() {
           <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm">
             <h3 className="text-sm font-bold text-slate-200 mb-4">最近事件</h3>
             <div className="space-y-4">
-              <div className="flex items-start space-x-3">
-                <span className="text-xs text-slate-500 font-mono mt-0.5">10:42</span>
-                <p className="text-sm text-slate-300">发现 3 个字段语义冲突，已生成待确认任务</p>
-              </div>
-              <div className="flex items-start space-x-3">
-                <span className="text-xs text-slate-500 font-mono mt-0.5">10:48</span>
-                <p className="text-sm text-slate-300">已生成候选对象清单（预览版）</p>
-              </div>
-              <div className="flex items-start space-x-3">
-                <span className="text-xs text-slate-500 font-mono mt-0.5">10:50</span>
-                <p className="text-sm text-slate-300">用户执行：批准执行计划</p>
-              </div>
+              <AnimatePresence initial={false}>
+                {recentEvents.map((event) => (
+                  <motion.div 
+                    key={event.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex items-start space-x-3"
+                  >
+                    <span className="text-xs text-slate-500 font-mono mt-0.5">{event.time}</span>
+                    <p className="text-sm text-slate-300">{event.content}</p>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
             </div>
             <div className="mt-4 pt-4 border-t border-slate-800/50">
               <button 
                 onClick={() => {
-                  // In a real app, this might open a history tab or modal
-                  console.log("Open history");
+                  setIsRightRailOpen(true);
+                  setRightTab('history');
                 }}
                 className="text-xs text-indigo-400 hover:text-indigo-300 flex items-center transition-colors"
               >
@@ -644,11 +745,17 @@ export default function AIOpsWorkbenchRequestDetail() {
             {/* Input Bar */}
             <div className="relative group">
               <div className={cn(
-                "relative flex items-end space-x-3 p-2 bg-slate-950 border rounded-xl transition-all shadow-lg",
+                "relative flex items-end space-x-2 p-2 bg-slate-950 border rounded-2xl transition-all shadow-lg",
                 "border-slate-800 group-focus-within:border-indigo-500/50 group-focus-within:ring-1 group-focus-within:ring-indigo-500/20"
               )}>
+                <div className="flex items-center pb-1 pl-1">
+                  <button className="p-2 text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-xl transition-colors">
+                    <Paperclip size={18} />
+                  </button>
+                </div>
                 <div className="flex-1 min-w-0">
                   <textarea
+                    ref={textareaRef}
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={(e) => {
@@ -658,24 +765,33 @@ export default function AIOpsWorkbenchRequestDetail() {
                       }
                     }}
                     placeholder="继续在当前任务中输入，例如：只重跑语义理解，或生成本次阶段报告..."
-                    className="w-full bg-transparent border-none focus:ring-0 text-slate-200 placeholder-slate-500 text-sm py-1.5 px-2 resize-none max-h-24 custom-scrollbar"
+                    className="w-full bg-transparent border-none focus:ring-0 text-slate-200 placeholder-slate-500 text-sm py-2.5 px-2 resize-none custom-scrollbar"
                     rows={1}
+                    style={{ minHeight: '40px' }}
                   />
                 </div>
-                <div className="flex items-center pb-0.5 pr-0.5">
+                <div className="flex items-center pb-1 pr-1 space-x-1">
+                  {!input.trim() && (
+                    <button className="p-2 text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-xl transition-colors">
+                      <Mic size={18} />
+                    </button>
+                  )}
                   <button 
                     onClick={handleSendMessage}
                     disabled={!input.trim()}
                     className={cn(
-                      "p-1.5 rounded-lg transition-all",
+                      "p-2 rounded-xl transition-all flex items-center justify-center",
                       input.trim() 
-                        ? "bg-indigo-600 text-white hover:bg-indigo-500" 
+                        ? "bg-indigo-600 text-white hover:bg-indigo-500 shadow-md shadow-indigo-900/20" 
                         : "bg-slate-800 text-slate-500 cursor-not-allowed"
                     )}
                   >
-                    <Send size={16} />
+                    <Send size={18} className={cn(input.trim() && "translate-x-0.5")} />
                   </button>
                 </div>
+              </div>
+              <div className="text-center mt-2">
+                <span className="text-[10px] text-slate-500">AI 可能会犯错，请核对重要信息。按 Enter 发送，Shift + Enter 换行。</span>
               </div>
             </div>
           </div>
@@ -704,6 +820,7 @@ export default function AIOpsWorkbenchRequestDetail() {
                   { id: 'runs', label: '运行进度', icon: PlayCircle },
                   { id: 'actions', label: '待处理', icon: ListTodo },
                   { id: 'deliverables', label: '交付物', icon: Package },
+                  { id: 'history', label: '全过程', icon: History },
                   { id: 'replay', label: '执行回放', icon: RotateCcw },
                 ].map(tab => (
                   <button
@@ -867,6 +984,47 @@ export default function AIOpsWorkbenchRequestDetail() {
                 </div>
               )}
 
+              {rightTab === 'history' && (
+                <div className="space-y-6">
+                  <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl shadow-sm">
+                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">全过程记录</h4>
+                    <div className="space-y-4 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-800 before:to-transparent">
+                      {messages.map((msg, idx) => (
+                        <div key={msg.id} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+                          <div className="flex items-center justify-center w-10 h-10 rounded-full border border-slate-800 bg-slate-900 text-slate-500 shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2">
+                            {msg.type === 'user' ? <MessageSquare size={16} /> :
+                             msg.type === 'plan' ? <Layers size={16} /> :
+                             msg.type === 'progress' ? <Activity size={16} /> :
+                             msg.type === 'blocker' ? <ShieldAlert size={16} /> :
+                             msg.type === 'result' ? <CheckCircle2 size={16} /> :
+                             <FileText size={16} />}
+                          </div>
+                          <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-4 rounded-xl border border-slate-800 bg-slate-950/50 shadow-sm">
+                            <div className="flex items-center justify-between mb-1">
+                              <div className="font-bold text-slate-300 text-xs">
+                                {msg.type === 'user' ? '用户输入' :
+                                 msg.type === 'plan' ? '执行计划' :
+                                 msg.type === 'progress' ? `阶段 ${msg.stageId}: ${msg.stageName}` :
+                                 msg.type === 'blocker' ? '阻塞项' :
+                                 msg.type === 'result' ? '执行结果' :
+                                 '交付物'}
+                              </div>
+                              <time className="font-mono text-[10px] text-slate-500">
+                                {new Date().getHours().toString().padStart(2, '0')}:{new Date().getMinutes().toString().padStart(2, '0')}
+                              </time>
+                            </div>
+                            <div className="text-sm text-slate-400">
+                              {msg.content || msg.summary || '执行中...'}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      <div ref={chatEndRef} />
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {rightTab === 'replay' && (
                 <div className="space-y-6">
                   <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl shadow-sm">
@@ -953,12 +1111,40 @@ export default function AIOpsWorkbenchRequestDetail() {
                     阶段 {stageId}: {STAGES.find(s => s.id === stageId)?.name}
                   </h2>
                 </div>
-                <button 
-                  onClick={closeDrawer}
-                  className="p-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-lg transition-colors"
-                >
-                  <X size={18} />
-                </button>
+                <div className="flex items-center space-x-2">
+                  <div className="flex items-center bg-slate-900 border border-slate-800 rounded-lg overflow-hidden">
+                    <button 
+                      onClick={() => {
+                        const currentIndex = STAGES.findIndex(s => s.id === stageId);
+                        if (currentIndex > 0) openStage(STAGES[currentIndex - 1].id);
+                      }}
+                      disabled={STAGES.findIndex(s => s.id === stageId) <= 0}
+                      className="p-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                      title="上一个阶段"
+                    >
+                      <ChevronLeft size={16} />
+                    </button>
+                    <div className="w-px h-4 bg-slate-800"></div>
+                    <button 
+                      onClick={() => {
+                        const currentIndex = STAGES.findIndex(s => s.id === stageId);
+                        if (currentIndex < STAGES.length - 1) openStage(STAGES[currentIndex + 1].id);
+                      }}
+                      disabled={STAGES.findIndex(s => s.id === stageId) >= STAGES.length - 1}
+                      className="p-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                      title="下一个阶段"
+                    >
+                      <ChevronRight size={16} />
+                    </button>
+                  </div>
+                  <div className="w-px h-4 bg-slate-800 mx-1"></div>
+                  <button 
+                    onClick={closeDrawer}
+                    className="p-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-lg transition-colors"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
               </div>
               
               <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">

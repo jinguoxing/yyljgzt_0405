@@ -127,6 +127,21 @@ export default function AIOpsWorkbenchRequestDetail() {
     }, 1000);
   };
 
+  const handleQuickAction = (text: string) => {
+    setMessages(prev => [...prev, { id: Date.now().toString(), type: 'user', role: 'user', content: text }]);
+    setTimeout(() => {
+      setMessages(prev => [...prev, { 
+        id: Date.now().toString(), 
+        type: 'progress', 
+        role: 'ai',
+        stageId: 'A',
+        stageName: '系统初始化',
+        status: 'IN_PROGRESS',
+        summary: `收到指令：${text}，正在准备执行...` 
+      }]);
+    }, 1000);
+  };
+
   const handleApprovePlan = () => {
     setMessages(prev => [...prev, { id: Date.now().toString(), type: 'user', role: 'user', content: '批准执行计划' }]);
     setTimeout(() => {
@@ -691,6 +706,7 @@ export default function AIOpsWorkbenchRequestDetail() {
               ].map((action, idx) => (
                 <button 
                   key={idx} 
+                  onClick={() => handleQuickAction(action.label)}
                   className="flex items-center space-x-1.5 px-3 py-1.5 bg-slate-800/50 hover:bg-slate-700 text-slate-400 hover:text-slate-200 text-[11px] rounded-lg whitespace-nowrap transition-colors border border-slate-700/50"
                 >
                   <action.icon size={12} />

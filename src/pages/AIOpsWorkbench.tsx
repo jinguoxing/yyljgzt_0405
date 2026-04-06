@@ -5,7 +5,7 @@ import {
   CheckCircle2, AlertTriangle, MoreVertical, LayoutDashboard,
   Library, ChevronDown, Database, Bot, ShieldAlert, Play,
   Archive, ExternalLink, CheckSquare, X, Activity, AlertCircle, FileText, User, ChevronRight,
-  ListTodo, Package, RotateCcw, MoreHorizontal
+  ListTodo, Package, RotateCcw, MoreHorizontal, PanelLeftClose, PanelLeft, PanelRightClose, PanelRight
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import AIOpsWorkbenchRequestCreateModal from '@/components/AIOpsWorkbenchRequestCreateModal';
@@ -42,6 +42,8 @@ export default function AIOpsWorkbench() {
   const [activeTab, setActiveTab] = useState('run'); // run, todo, deliverable, replay
   const [activeTaskId, setActiveTaskId] = useState<string>('REQ-20260227-001');
   const [dropdownOpenId, setDropdownOpenId] = useState<string | null>(null);
+  const [isLeftPanelOpen, setIsLeftPanelOpen] = useState(true);
+  const [isRightPanelOpen, setIsRightPanelOpen] = useState(true);
 
   const handleCreateRequest = (start: boolean) => {
     setIsCreateModalOpen(false);
@@ -65,6 +67,13 @@ export default function AIOpsWorkbench() {
       {/* 1. TopBar */}
       <div className="h-16 border-b border-slate-800 bg-slate-900/50 flex items-center justify-between px-6 shrink-0">
         <div className="flex items-center space-x-3">
+          <button 
+            onClick={() => setIsLeftPanelOpen(!isLeftPanelOpen)}
+            className="text-slate-400 hover:text-slate-200 transition-colors mr-2"
+            title={isLeftPanelOpen ? "收起左侧栏" : "展开左侧栏"}
+          >
+            {isLeftPanelOpen ? <PanelLeftClose size={20} /> : <PanelLeft size={20} />}
+          </button>
           <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-900/20">
             <LayoutDashboard className="w-5 h-5 text-white" />
           </div>
@@ -102,94 +111,107 @@ export default function AIOpsWorkbench() {
           <div className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center cursor-pointer hover:bg-slate-700 transition-colors">
             <User size={16} className="text-slate-300" />
           </div>
+          <div className="w-px h-6 bg-slate-700 mx-1"></div>
+          <button 
+            onClick={() => setIsRightPanelOpen(!isRightPanelOpen)}
+            className="text-slate-400 hover:text-slate-200 transition-colors ml-2"
+            title={isRightPanelOpen ? "收起右侧栏" : "展开右侧栏"}
+          >
+            {isRightPanelOpen ? <PanelRightClose size={20} /> : <PanelRight size={20} />}
+          </button>
         </div>
       </div>
 
       <div className="flex-1 flex overflow-hidden">
         {/* 2. Left Rail (Task Pool) */}
-        <div className="w-80 border-r border-slate-800 bg-slate-900/30 flex flex-col shrink-0">
-          <div className="p-4 border-b border-slate-800 font-medium text-slate-200 flex items-center justify-between">
-            <span>任务池</span>
-            <button className="text-slate-400 hover:text-slate-200"><Filter size={14}/></button>
-          </div>
-          <div className="flex-1 overflow-y-auto p-3 space-y-6 custom-scrollbar">
-            {['进行中', '待确认', '阻塞中', '最近完成', '我的任务'].map(category => {
-              const tasksInCategory = MOCK_TASKS.filter(t => t.category === category);
-              if (tasksInCategory.length === 0 && category === '我的任务') return null; // Skip empty 'My Tasks' for now
+        <div className={cn(
+          "border-slate-800 bg-slate-900/30 flex flex-col shrink-0 transition-all duration-300 overflow-hidden",
+          isLeftPanelOpen ? "w-80 border-r" : "w-0 border-r-0"
+        )}>
+          <div className="w-80 flex flex-col h-full">
+            <div className="p-4 border-b border-slate-800 font-medium text-slate-200 flex items-center justify-between shrink-0">
+              <span>任务池</span>
+              <button className="text-slate-400 hover:text-slate-200"><Filter size={14}/></button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-3 space-y-6 custom-scrollbar">
+              {['进行中', '待确认', '阻塞中', '最近完成', '我的任务'].map(category => {
+                const tasksInCategory = MOCK_TASKS.filter(t => t.category === category);
+                if (tasksInCategory.length === 0 && category === '我的任务') return null; // Skip empty 'My Tasks' for now
 
-              return (
-                <div key={category}>
-                  <div className="flex items-center justify-between text-xs font-medium text-slate-400 mb-3 px-1">
-                    <span>{category}</span>
-                    <span className="bg-slate-800 px-1.5 py-0.5 rounded text-[10px]">{tasksInCategory.length}</span>
-                  </div>
-                  <div className="space-y-2">
-                    {tasksInCategory.map(task => {
-                      const statusConfig = getStatusConfig(task.status);
-                      return (
-                        <div 
-                          key={task.id} 
-                          onClick={() => setActiveTaskId(task.id)}
-                          onMouseLeave={() => setDropdownOpenId(null)}
-                          className={cn(
-                            "p-3 rounded-xl border transition-all cursor-pointer group relative", 
-                            activeTaskId === task.id 
-                              ? "bg-slate-800/80 border-indigo-500/50 shadow-sm" 
-                              : "bg-slate-900/50 border-transparent hover:bg-slate-800/50 hover:border-slate-700"
-                          )}
-                        >
-                          <div className="flex justify-between items-start mb-1.5">
-                            <span className="text-[10px] font-mono text-slate-500">{task.id}</span>
-                            <button 
-                              className="text-slate-500 hover:text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity" 
-                              onClick={(e) => { e.stopPropagation(); setDropdownOpenId(dropdownOpenId === task.id ? null : task.id); }}
-                            >
-                              <MoreHorizontal size={14} />
-                            </button>
-                            {/* Dropdown Menu */}
-                            {dropdownOpenId === task.id && (
-                              <div className="absolute right-2 top-8 w-32 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-50 py-1 overflow-hidden" onClick={(e) => e.stopPropagation()}>
-                                <button className="w-full text-left px-3 py-2 text-xs text-slate-300 hover:bg-slate-700 hover:text-white transition-colors flex items-center"><ExternalLink size={12} className="mr-2"/> 查看详情</button>
-                                <button className="w-full text-left px-3 py-2 text-xs text-slate-300 hover:bg-slate-700 hover:text-white transition-colors flex items-center"><Play size={12} className="mr-2"/> 重新运行</button>
-                                <button className="w-full text-left px-3 py-2 text-xs text-slate-300 hover:bg-slate-700 hover:text-white transition-colors flex items-center"><Archive size={12} className="mr-2"/> 归档</button>
-                                <div className="h-px bg-slate-700 my-1"></div>
-                                <button className="w-full text-left px-3 py-2 text-xs text-emerald-400 hover:bg-slate-700 transition-colors flex items-center"><CheckSquare size={12} className="mr-2"/> 标记完成</button>
-                              </div>
+                return (
+                  <div key={category}>
+                    <div className="flex items-center justify-between text-xs font-medium text-slate-400 mb-3 px-1">
+                      <span>{category}</span>
+                      <span className="bg-slate-800 px-1.5 py-0.5 rounded text-[10px]">{tasksInCategory.length}</span>
+                    </div>
+                    <div className="space-y-2">
+                      {tasksInCategory.map(task => {
+                        const statusConfig = getStatusConfig(task.status);
+                        return (
+                          <div 
+                            key={task.id} 
+                            onClick={() => setActiveTaskId(task.id)}
+                            onMouseLeave={() => setDropdownOpenId(null)}
+                            className={cn(
+                              "p-3 rounded-xl border transition-all cursor-pointer group relative", 
+                              activeTaskId === task.id 
+                                ? "bg-slate-800/80 border-indigo-500/50 shadow-sm" 
+                                : "bg-slate-900/50 border-transparent hover:bg-slate-800/50 hover:border-slate-700"
                             )}
-                          </div>
-                          
-                          <div className="text-sm font-medium text-slate-200 mb-2 line-clamp-2 leading-snug group-hover:text-indigo-400 transition-colors">
-                            {task.title}
-                          </div>
-                          
-                          <div className="flex items-center space-x-2 mb-3">
-                            <span className={cn("px-1.5 py-0.5 rounded text-[10px] font-medium border", statusConfig.color)}>
-                              {statusConfig.label}
-                            </span>
-                            <span className="text-xs text-slate-400">｜ {task.type}</span>
-                          </div>
-                          
-                          <div className="flex items-center justify-between text-[10px]">
-                            <div className="flex items-center space-x-2">
-                              <span className={cn(
-                                "font-medium",
-                                task.blockers.hard > 0 ? "text-red-400" : task.blockers.soft > 0 ? "text-amber-400" : "text-slate-500"
-                              )}>
-                                Hard {task.blockers.hard} / Soft {task.blockers.soft}
-                              </span>
+                          >
+                            <div className="flex justify-between items-start mb-1.5">
+                              <span className="text-[10px] font-mono text-slate-500">{task.id}</span>
+                              <button 
+                                className="text-slate-500 hover:text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity" 
+                                onClick={(e) => { e.stopPropagation(); setDropdownOpenId(dropdownOpenId === task.id ? null : task.id); }}
+                              >
+                                <MoreHorizontal size={14} />
+                              </button>
+                              {/* Dropdown Menu */}
+                              {dropdownOpenId === task.id && (
+                                <div className="absolute right-2 top-8 w-32 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-50 py-1 overflow-hidden" onClick={(e) => e.stopPropagation()}>
+                                  <button onClick={() => navigate(`/aiops/workbench/requests/${task.id}`)} className="w-full text-left px-3 py-2 text-xs text-slate-300 hover:bg-slate-700 hover:text-white transition-colors flex items-center"><ExternalLink size={12} className="mr-2"/> 查看详情</button>
+                                  <button onClick={() => setDropdownOpenId(null)} className="w-full text-left px-3 py-2 text-xs text-slate-300 hover:bg-slate-700 hover:text-white transition-colors flex items-center"><Play size={12} className="mr-2"/> 重新运行</button>
+                                  <button onClick={() => setDropdownOpenId(null)} className="w-full text-left px-3 py-2 text-xs text-slate-300 hover:bg-slate-700 hover:text-white transition-colors flex items-center"><Archive size={12} className="mr-2"/> 归档</button>
+                                  <div className="h-px bg-slate-700 my-1"></div>
+                                  <button onClick={() => setDropdownOpenId(null)} className="w-full text-left px-3 py-2 text-xs text-emerald-400 hover:bg-slate-700 transition-colors flex items-center"><CheckSquare size={12} className="mr-2"/> 标记完成</button>
+                                </div>
+                              )}
                             </div>
-                            <span className="text-slate-500">{task.lastUpdated}</span>
+                            
+                            <div className="text-sm font-medium text-slate-200 mb-2 line-clamp-2 leading-snug group-hover:text-indigo-400 transition-colors">
+                              {task.title}
+                            </div>
+                            
+                            <div className="flex items-center space-x-2 mb-3">
+                              <span className={cn("px-1.5 py-0.5 rounded text-[10px] font-medium border", statusConfig.color)}>
+                                {statusConfig.label}
+                              </span>
+                              <span className="text-xs text-slate-400">｜ {task.type}</span>
+                            </div>
+                            
+                            <div className="flex items-center justify-between text-[10px]">
+                              <div className="flex items-center space-x-2">
+                                <span className={cn(
+                                  "font-medium",
+                                  task.blockers.hard > 0 ? "text-red-400" : task.blockers.soft > 0 ? "text-amber-400" : "text-slate-500"
+                                )}>
+                                  Hard {task.blockers.hard} / Soft {task.blockers.soft}
+                                </span>
+                              </div>
+                              <span className="text-slate-500">{task.lastUpdated}</span>
+                            </div>
                           </div>
-                        </div>
-                      );
-                    })}
-                    {tasksInCategory.length === 0 && (
-                      <div className="text-xs text-slate-600 px-1 py-2 italic">暂无任务</div>
-                    )}
+                        );
+                      })}
+                      {tasksInCategory.length === 0 && (
+                        <div className="text-xs text-slate-600 px-1 py-2 italic">暂无任务</div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         </div>
 
@@ -221,14 +243,17 @@ export default function AIOpsWorkbench() {
 
                   <div className="flex items-center space-x-2">
                     <span className="text-xs text-slate-500 font-medium">快捷模板:</span>
-                    <button className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs rounded border border-slate-700 transition-colors">一键运行全流程</button>
-                    <button className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs rounded border border-slate-700 transition-colors">只跑扫描</button>
-                    <button className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs rounded border border-slate-700 transition-colors">查找支持 GMV 的数据</button>
+                    <button onClick={() => setInputText('一键运行全流程')} className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs rounded border border-slate-700 transition-colors">一键运行全流程</button>
+                    <button onClick={() => setInputText('只跑扫描')} className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs rounded border border-slate-700 transition-colors">只跑扫描</button>
+                    <button onClick={() => setInputText('查找支持 GMV 的数据')} className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs rounded border border-slate-700 transition-colors">查找支持 GMV 的数据</button>
                   </div>
                 </div>
                 
                 <div className="absolute bottom-3 right-3">
-                  <button className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-1.5 rounded-lg text-sm font-medium transition-colors shadow-lg shadow-indigo-900/20 flex items-center space-x-1">
+                  <button 
+                    onClick={() => handleCreateRequest(true)}
+                    className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-1.5 rounded-lg text-sm font-medium transition-colors shadow-lg shadow-indigo-900/20 flex items-center space-x-1"
+                  >
                     <Play size={14} />
                     <span>发起</span>
                   </button>
@@ -352,7 +377,12 @@ export default function AIOpsWorkbench() {
                       <div className="flex items-center space-x-2">
                         <button className="text-xs text-slate-400 hover:text-slate-200 transition-colors">稍后处理</button>
                         <button className="text-xs text-slate-400 hover:text-slate-200 transition-colors">查看原因</button>
-                        <button className="text-xs bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded transition-colors">立即处理</button>
+                        <button 
+                          onClick={() => navigate('/aiops/workbench/requests/REQ-20260227-001')}
+                          className="text-xs bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded transition-colors"
+                        >
+                          立即处理
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -377,7 +407,12 @@ export default function AIOpsWorkbench() {
                       <div className="flex items-center space-x-2">
                         <button className="text-xs text-slate-400 hover:text-slate-200 transition-colors">稍后处理</button>
                         <button className="text-xs text-slate-400 hover:text-slate-200 transition-colors">查看原因</button>
-                        <button className="text-xs bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded transition-colors">立即处理</button>
+                        <button 
+                          onClick={() => navigate('/aiops/workbench/requests/REQ-20260227-001')}
+                          className="text-xs bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded transition-colors"
+                        >
+                          立即处理
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -427,7 +462,11 @@ export default function AIOpsWorkbench() {
                       { title: '重新运行 Stage D', action: '运行', primary: false },
                       { title: '转入问数验证', action: '转入', primary: false }
                     ].map((item, i) => (
-                      <div key={i} className="p-3 bg-slate-900 border border-slate-800 rounded-xl hover:border-slate-700 transition-colors flex items-center justify-between group cursor-pointer">
+                      <div 
+                        key={i} 
+                        onClick={() => navigate('/aiops/workbench/requests/REQ-20260227-001')}
+                        className="p-3 bg-slate-900 border border-slate-800 rounded-xl hover:border-slate-700 transition-colors flex items-center justify-between group cursor-pointer"
+                      >
                         <span className="text-sm text-slate-300 group-hover:text-slate-200">{item.title}</span>
                         <button className={cn(
                           "text-xs px-3 py-1.5 rounded transition-colors flex items-center",
@@ -448,150 +487,155 @@ export default function AIOpsWorkbench() {
         </div>
 
         {/* 5. Right Console */}
-        <div className="w-80 border-l border-slate-800 bg-slate-900/30 flex flex-col shrink-0">
-          <div className="flex border-b border-slate-800">
-            {[
-              { id: 'run', label: '运行摘要', icon: Activity },
-              { id: 'todo', label: '待处理', icon: ListTodo },
-              { id: 'deliverable', label: '交付物', icon: Package },
-              { id: 'replay', label: '回放', icon: RotateCcw }
-            ].map(tab => (
-              <button 
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={cn(
-                  "flex-1 py-3 text-xs font-medium flex flex-col items-center justify-center space-y-1 border-b-2 transition-colors",
-                  activeTab === tab.id ? "border-indigo-500 text-indigo-400 bg-indigo-500/5" : "border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
-                )}
-              >
-                <tab.icon size={14} />
-                <span>{tab.label}</span>
-              </button>
-            ))}
-          </div>
-          <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
-            {activeTab === 'run' && (
-              <div className="space-y-4">
-                <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl shadow-sm">
-                  <h4 className="text-xs font-medium text-slate-400 mb-4 uppercase tracking-wider">当前运行状态</h4>
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs text-slate-500">当前 Run ID</span>
-                      <span className="text-xs font-mono text-slate-300 bg-slate-800 px-1.5 py-0.5 rounded">RUN-8A9B2C</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs text-slate-500">执行时长</span>
-                      <span className="text-xs text-slate-300">00:12:45</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs text-slate-500">Token / Tool Call</span>
-                      <span className="text-xs text-slate-300">12.5k / 42</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs text-slate-500">当前阶段</span>
-                      <span className="text-xs text-indigo-400 font-medium">语义推断中</span>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl shadow-sm">
-                  <h4 className="text-xs font-medium text-slate-400 mb-4 uppercase tracking-wider">最近动态</h4>
-                  <div className="space-y-4 relative before:absolute before:inset-0 before:ml-1.5 before:-translate-x-px before:h-full before:w-0.5 before:bg-slate-800">
-                    {[
-                      { time: '10:42 AM', desc: 'Data Steward AI 完成了 employees 表的扫描。' },
-                      { time: '10:35 AM', desc: '开始执行语义推断任务。' },
-                      { time: '10:30 AM', desc: '任务 RUN-8A9B2C 已启动。' }
-                    ].map((item, i) => (
-                      <div key={i} className="relative flex items-start group">
-                        <div className="flex items-center justify-center w-3 h-3 rounded-full border-2 border-slate-900 bg-indigo-500 shadow shrink-0 mt-1 z-10"></div>
-                        <div className="ml-3 w-full">
-                          <div className="text-[10px] text-slate-500 mb-0.5">{item.time}</div>
-                          <div className="text-xs text-slate-300 leading-relaxed">{item.desc}</div>
-                        </div>
+        <div className={cn(
+          "border-slate-800 bg-slate-900/30 flex flex-col shrink-0 transition-all duration-300 overflow-hidden",
+          isRightPanelOpen ? "w-80 border-l" : "w-0 border-l-0"
+        )}>
+          <div className="w-80 flex flex-col h-full">
+            <div className="flex border-b border-slate-800 shrink-0">
+              {[
+                { id: 'run', label: '运行摘要', icon: Activity },
+                { id: 'todo', label: '待处理', icon: ListTodo },
+                { id: 'deliverable', label: '交付物', icon: Package },
+                { id: 'replay', label: '回放', icon: RotateCcw }
+              ].map(tab => (
+                <button 
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={cn(
+                    "flex-1 py-3 text-xs font-medium flex flex-col items-center justify-center space-y-1 border-b-2 transition-colors",
+                    activeTab === tab.id ? "border-indigo-500 text-indigo-400 bg-indigo-500/5" : "border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
+                  )}
+                >
+                  <tab.icon size={14} />
+                  <span>{tab.label}</span>
+                </button>
+              ))}
+            </div>
+            <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+              {activeTab === 'run' && (
+                <div className="space-y-4">
+                  <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl shadow-sm">
+                    <h4 className="text-xs font-medium text-slate-400 mb-4 uppercase tracking-wider">当前运行状态</h4>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-slate-500">当前 Run ID</span>
+                        <span className="text-xs font-mono text-slate-300 bg-slate-800 px-1.5 py-0.5 rounded">RUN-8A9B2C</span>
                       </div>
-                    ))}
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-slate-500">执行时长</span>
+                        <span className="text-xs text-slate-300">00:12:45</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-slate-500">Token / Tool Call</span>
+                        <span className="text-xs text-slate-300">12.5k / 42</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-slate-500">当前阶段</span>
+                        <span className="text-xs text-indigo-400 font-medium">语义推断中</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl shadow-sm">
+                    <h4 className="text-xs font-medium text-slate-400 mb-4 uppercase tracking-wider">最近动态</h4>
+                    <div className="space-y-4 relative before:absolute before:inset-0 before:ml-1.5 before:-translate-x-px before:h-full before:w-0.5 before:bg-slate-800">
+                      {[
+                        { time: '10:42 AM', desc: 'Data Steward AI 完成了 employees 表的扫描。' },
+                        { time: '10:35 AM', desc: '开始执行语义推断任务。' },
+                        { time: '10:30 AM', desc: '任务 RUN-8A9B2C 已启动。' }
+                      ].map((item, i) => (
+                        <div key={i} className="relative flex items-start group">
+                          <div className="flex items-center justify-center w-3 h-3 rounded-full border-2 border-slate-900 bg-indigo-500 shadow shrink-0 mt-1 z-10"></div>
+                          <div className="ml-3 w-full">
+                            <div className="text-[10px] text-slate-500 mb-0.5">{item.time}</div>
+                            <div className="text-xs text-slate-300 leading-relaxed">{item.desc}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
-            {activeTab === 'todo' && (
-              <div className="space-y-4">
-                <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl shadow-sm">
-                  <h4 className="text-xs font-medium text-slate-400 mb-4 uppercase tracking-wider">待处理概览</h4>
-                  <div className="grid grid-cols-2 gap-3 mb-4">
-                    <div className="bg-slate-950 p-3 rounded-lg border border-slate-800 flex flex-col items-center justify-center">
-                      <div className="text-2xl font-bold text-red-400 mb-1">0</div>
-                      <div className="text-[10px] text-slate-500">Hard-block 数</div>
+              )}
+              {activeTab === 'todo' && (
+                <div className="space-y-4">
+                  <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl shadow-sm">
+                    <h4 className="text-xs font-medium text-slate-400 mb-4 uppercase tracking-wider">待处理概览</h4>
+                    <div className="grid grid-cols-2 gap-3 mb-4">
+                      <div className="bg-slate-950 p-3 rounded-lg border border-slate-800 flex flex-col items-center justify-center">
+                        <div className="text-2xl font-bold text-red-400 mb-1">0</div>
+                        <div className="text-[10px] text-slate-500">Hard-block 数</div>
+                      </div>
+                      <div className="bg-slate-950 p-3 rounded-lg border border-slate-800 flex flex-col items-center justify-center">
+                        <div className="text-2xl font-bold text-amber-400 mb-1">3</div>
+                        <div className="text-[10px] text-slate-500">Soft-task 数</div>
+                      </div>
                     </div>
-                    <div className="bg-slate-950 p-3 rounded-lg border border-slate-800 flex flex-col items-center justify-center">
-                      <div className="text-2xl font-bold text-amber-400 mb-1">3</div>
-                      <div className="text-[10px] text-slate-500">Soft-task 数</div>
-                    </div>
-                  </div>
-                  <div>
-                    <span className="text-xs text-slate-500 block mb-2">最新待处理项</span>
-                    <div className="p-3 bg-slate-950 border border-slate-800 rounded-lg">
-                      <div className="text-xs font-medium text-slate-200 mb-1">字段语义冲突待确认</div>
-                      <div className="text-[10px] text-slate-500">10 分钟前</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-            {activeTab === 'deliverable' && (
-              <div className="space-y-4">
-                <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl shadow-sm">
-                  <h4 className="text-xs font-medium text-slate-400 mb-4 uppercase tracking-wider">交付物状态</h4>
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs text-slate-500">已生成交付物数</span>
-                      <span className="text-lg font-bold text-emerald-400">2</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs text-slate-500">最近交付物类型</span>
-                      <span className="text-xs text-slate-300 bg-slate-800 px-2 py-1 rounded">语义结果草案</span>
-                    </div>
-                    <div className="pt-2 border-t border-slate-800/50">
-                      <span className="text-xs text-slate-500 block mb-2">当前可预览项</span>
-                      <div className="space-y-2">
-                        <div className="text-xs text-indigo-400 hover:underline cursor-pointer flex items-center">
-                          <FileText size={12} className="mr-1" /> 语义结果草案 v1.0
-                        </div>
-                        <div className="text-xs text-indigo-400 hover:underline cursor-pointer flex items-center">
-                          <FileText size={12} className="mr-1" /> 质量规则草案 v0.8
-                        </div>
+                    <div>
+                      <span className="text-xs text-slate-500 block mb-2">最新待处理项</span>
+                      <div className="p-3 bg-slate-950 border border-slate-800 rounded-lg">
+                        <div className="text-xs font-medium text-slate-200 mb-1">字段语义冲突待确认</div>
+                        <div className="text-[10px] text-slate-500">10 分钟前</div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            )}
-            {activeTab === 'replay' && (
-              <div className="space-y-4">
-                <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl shadow-sm">
-                  <h4 className="text-xs font-medium text-slate-400 mb-4 uppercase tracking-wider">回放与对比</h4>
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs text-slate-500">最近回放版本</span>
-                      <span className="text-xs font-mono text-slate-300 bg-slate-800 px-1.5 py-0.5 rounded">v1.2.0-beta</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs text-slate-500">差异字段数</span>
-                      <span className="text-xs font-bold text-amber-400">12</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs text-slate-500">最近一次对比时间</span>
-                      <span className="text-xs text-slate-300">2026-04-05 10:15</span>
-                    </div>
-                    <div className="pt-4 mt-2 border-t border-slate-800/50">
-                      <button className="w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs rounded-lg transition-colors flex items-center justify-center">
-                        <RotateCcw size={14} className="mr-2" /> 查看详细差异
-                      </button>
+              )}
+              {activeTab === 'deliverable' && (
+                <div className="space-y-4">
+                  <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl shadow-sm">
+                    <h4 className="text-xs font-medium text-slate-400 mb-4 uppercase tracking-wider">交付物状态</h4>
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-slate-500">已生成交付物数</span>
+                        <span className="text-lg font-bold text-emerald-400">2</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-slate-500">最近交付物类型</span>
+                        <span className="text-xs text-slate-300 bg-slate-800 px-2 py-1 rounded">语义结果草案</span>
+                      </div>
+                      <div className="pt-2 border-t border-slate-800/50">
+                        <span className="text-xs text-slate-500 block mb-2">当前可预览项</span>
+                        <div className="space-y-2">
+                          <div className="text-xs text-indigo-400 hover:underline cursor-pointer flex items-center">
+                            <FileText size={12} className="mr-1" /> 语义结果草案 v1.0
+                          </div>
+                          <div className="text-xs text-indigo-400 hover:underline cursor-pointer flex items-center">
+                            <FileText size={12} className="mr-1" /> 质量规则草案 v0.8
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
+              {activeTab === 'replay' && (
+                <div className="space-y-4">
+                  <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl shadow-sm">
+                    <h4 className="text-xs font-medium text-slate-400 mb-4 uppercase tracking-wider">回放与对比</h4>
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-slate-500">最近回放版本</span>
+                        <span className="text-xs font-mono text-slate-300 bg-slate-800 px-1.5 py-0.5 rounded">v1.2.0-beta</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-slate-500">差异字段数</span>
+                        <span className="text-xs font-bold text-amber-400">12</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-slate-500">最近一次对比时间</span>
+                        <span className="text-xs text-slate-300">2026-04-05 10:15</span>
+                      </div>
+                      <div className="pt-4 mt-2 border-t border-slate-800/50">
+                        <button className="w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs rounded-lg transition-colors flex items-center justify-center">
+                          <RotateCcw size={14} className="mr-2" /> 查看详细差异
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

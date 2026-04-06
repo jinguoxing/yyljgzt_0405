@@ -140,29 +140,18 @@ export default function AIOpsWorkbench() {
             <span>模板库</span>
           </button>
           <button 
-            onClick={handleOpenCreateModal}
+            onClick={() => {
+              const inputEl = document.getElementById('unified-launcher-input');
+              if (inputEl) inputEl.focus();
+            }}
             className="flex items-center space-x-2 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-lg shadow-indigo-900/20"
           >
             <Plus size={16} />
             <span>新建任务</span>
           </button>
-          <div className="relative">
-            <button className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center cursor-pointer hover:bg-slate-700 transition-colors">
-              <MessageSquare size={16} className="text-slate-300" />
-            </button>
-            <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 border-2 border-slate-900 rounded-full"></span>
-          </div>
           <div className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center cursor-pointer hover:bg-slate-700 transition-colors">
             <User size={16} className="text-slate-300" />
           </div>
-          <div className="w-px h-6 bg-slate-700 mx-1"></div>
-          <button 
-            onClick={() => setIsRightPanelOpen(!isRightPanelOpen)}
-            className="text-slate-400 hover:text-slate-200 transition-colors ml-2"
-            title={isRightPanelOpen ? "收起右侧栏" : "展开右侧栏"}
-          >
-            {isRightPanelOpen ? <PanelRightClose size={20} /> : <PanelRight size={20} />}
-          </button>
         </div>
       </div>
 
@@ -178,9 +167,8 @@ export default function AIOpsWorkbench() {
               <button className="text-slate-400 hover:text-slate-200"><Filter size={14}/></button>
             </div>
             <div className="flex-1 overflow-y-auto p-3 space-y-6 custom-scrollbar">
-              {['进行中', '待确认', '阻塞中', '最近完成', '我的任务'].map(category => {
+              {['进行中', '待确认', '阻塞中', '最近完成'].map(category => {
                 const tasksInCategory = MOCK_TASKS.filter(t => t.category === category);
-                if (tasksInCategory.length === 0 && category === '我的任务') return null; // Skip empty 'My Tasks' for now
 
                 return (
                   <div key={category}>
@@ -265,6 +253,7 @@ export default function AIOpsWorkbench() {
             <div className="max-w-4xl mx-auto">
               <div className="relative bg-slate-900 border border-slate-700 rounded-xl shadow-sm focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500 transition-all">
                 <textarea 
+                  id="unified-launcher-input"
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
                   className="w-full bg-transparent text-slate-200 p-4 min-h-[100px] resize-none focus:outline-none"
@@ -524,128 +513,106 @@ export default function AIOpsWorkbench() {
           </div>
         </div>
 
-        {/* 5. Right Console */}
+        {/* 5. Right Summary */}
         <div className={cn(
           "border-slate-800 bg-slate-900/30 flex flex-col shrink-0 transition-all duration-300 overflow-hidden",
           isRightPanelOpen ? "w-80 border-l" : "w-0 border-l-0"
         )}>
           <div className="w-80 flex flex-col h-full">
-            <div className="flex border-b border-slate-800 shrink-0">
-              {[
-                { id: 'run', label: '运行摘要', icon: Activity },
-                { id: 'todo', label: '待处理', icon: ListTodo },
-                { id: 'deliverable', label: '交付物', icon: Package },
-                { id: 'replay', label: '回放', icon: RotateCcw }
-              ].map(tab => (
-                <button 
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={cn(
-                    "flex-1 py-3 text-xs font-medium flex flex-col items-center justify-center space-y-1 border-b-2 transition-colors",
-                    activeTab === tab.id ? "border-indigo-500 text-indigo-400 bg-indigo-500/5" : "border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
-                  )}
-                >
-                  <tab.icon size={14} />
-                  <span>{tab.label}</span>
-                </button>
-              ))}
+            <div className="p-4 border-b border-slate-800 font-medium text-slate-200 shrink-0">
+              摘要控制台
             </div>
-            <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
-              {activeTab === 'run' && (
+          <div className="flex-1 overflow-y-auto p-4 space-y-6 custom-scrollbar">
+            {/* 运行摘要 */}
+            <div className="space-y-4">
+              <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl shadow-sm">
+                <h4 className="text-xs font-medium text-slate-400 mb-4 uppercase tracking-wider flex items-center"><Activity size={14} className="mr-2"/> 运行摘要</h4>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-slate-500">当前 Run ID</span>
+                    <span className="text-xs font-mono text-slate-300 bg-slate-800 px-1.5 py-0.5 rounded">RUN-8A9B2C</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-slate-500">执行时长</span>
+                    <span className="text-xs text-slate-300">00:12:45</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-slate-500">当前阶段</span>
+                    <span className="text-xs text-indigo-400 font-medium">语义推断中</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 待处理摘要 */}
+            <div className="space-y-4">
+              <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl shadow-sm">
+                <h4 className="text-xs font-medium text-slate-400 mb-4 uppercase tracking-wider flex items-center"><ListTodo size={14} className="mr-2"/> 待处理摘要</h4>
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  <div className="bg-slate-950 p-3 rounded-lg border border-slate-800 flex flex-col items-center justify-center">
+                    <div className="text-2xl font-bold text-red-400 mb-1">0</div>
+                    <div className="text-[10px] text-slate-500">Hard-block 数</div>
+                  </div>
+                  <div className="bg-slate-950 p-3 rounded-lg border border-slate-800 flex flex-col items-center justify-center">
+                    <div className="text-2xl font-bold text-amber-400 mb-1">3</div>
+                    <div className="text-[10px] text-slate-500">Soft-task 数</div>
+                  </div>
+                </div>
+                <div>
+                  <span className="text-xs text-slate-500 block mb-2">最近待处理项</span>
+                  <div className="p-3 bg-slate-950 border border-slate-800 rounded-lg">
+                    <div className="text-xs font-medium text-slate-200 mb-1 truncate">3 个字段语义冲突待确认</div>
+                    <div className="text-[10px] text-slate-500">10 分钟前</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 交付物摘要 */}
+            <div className="space-y-4">
+              <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl shadow-sm">
+                <h4 className="text-xs font-medium text-slate-400 mb-4 uppercase tracking-wider flex items-center"><Package size={14} className="mr-2"/> 交付物摘要</h4>
                 <div className="space-y-4">
-                  <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl shadow-sm">
-                    <h4 className="text-xs font-medium text-slate-400 mb-4 uppercase tracking-wider">运行摘要</h4>
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs text-slate-500">当前 Run ID</span>
-                        <span className="text-xs font-mono text-slate-300 bg-slate-800 px-1.5 py-0.5 rounded">RUN-8A9B2C</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs text-slate-500">执行时长</span>
-                        <span className="text-xs text-slate-300">00:12:45</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs text-slate-500">Token / Tool Call</span>
-                        <span className="text-xs text-slate-300">12.5k / 42</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs text-slate-500">当前阶段</span>
-                        <span className="text-xs text-indigo-400 font-medium">语义推断中</span>
-                      </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-slate-500">当前交付物数量</span>
+                    <span className="text-lg font-bold text-emerald-400">2</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-slate-500">最近交付物名称</span>
+                    <span className="text-xs text-slate-300 bg-slate-800 px-2 py-1 rounded truncate">候选对象清单</span>
+                  </div>
+                  <div className="pt-2 border-t border-slate-800/50">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-slate-500">当前状态</span>
+                      <span className="text-xs text-amber-400">可预览，不可正式交付</span>
                     </div>
                   </div>
                 </div>
-              )}
-              {activeTab === 'todo' && (
+              </div>
+            </div>
+
+            {/* 回放摘要 */}
+            <div className="space-y-4">
+              <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl shadow-sm">
+                <h4 className="text-xs font-medium text-slate-400 mb-4 uppercase tracking-wider flex items-center"><RotateCcw size={14} className="mr-2"/> 回放摘要</h4>
                 <div className="space-y-4">
-                  <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl shadow-sm">
-                    <h4 className="text-xs font-medium text-slate-400 mb-4 uppercase tracking-wider">待处理摘要</h4>
-                    <div className="grid grid-cols-2 gap-3 mb-4">
-                      <div className="bg-slate-950 p-3 rounded-lg border border-slate-800 flex flex-col items-center justify-center">
-                        <div className="text-2xl font-bold text-red-400 mb-1">0</div>
-                        <div className="text-[10px] text-slate-500">Hard-block 数</div>
-                      </div>
-                      <div className="bg-slate-950 p-3 rounded-lg border border-slate-800 flex flex-col items-center justify-center">
-                        <div className="text-2xl font-bold text-amber-400 mb-1">3</div>
-                        <div className="text-[10px] text-slate-500">Soft-task 数</div>
-                      </div>
-                    </div>
-                    <div>
-                      <span className="text-xs text-slate-500 block mb-2">最近待处理项</span>
-                      <div className="p-3 bg-slate-950 border border-slate-800 rounded-lg">
-                        <div className="text-xs font-medium text-slate-200 mb-1 truncate">3 个字段语义冲突待确认</div>
-                        <div className="text-[10px] text-slate-500">10 分钟前</div>
-                      </div>
-                    </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-slate-500">最近回放版本</span>
+                    <span className="text-xs font-mono text-slate-300 bg-slate-800 px-1.5 py-0.5 rounded">v1.2 vs v1.1</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-slate-500">差异项</span>
+                    <span className="text-xs font-bold text-amber-400">12</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-slate-500">时间</span>
+                    <span className="text-xs text-slate-300">10 分钟前</span>
                   </div>
                 </div>
-              )}
-              {activeTab === 'deliverable' && (
-                <div className="space-y-4">
-                  <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl shadow-sm">
-                    <h4 className="text-xs font-medium text-slate-400 mb-4 uppercase tracking-wider">交付物摘要</h4>
-                    <div className="space-y-4">
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs text-slate-500">当前交付物数量</span>
-                        <span className="text-lg font-bold text-emerald-400">2</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs text-slate-500">最近交付物名称</span>
-                        <span className="text-xs text-slate-300 bg-slate-800 px-2 py-1 rounded truncate">候选对象清单</span>
-                      </div>
-                      <div className="pt-2 border-t border-slate-800/50">
-                        <div className="flex justify-between items-center">
-                          <span className="text-xs text-slate-500">当前状态</span>
-                          <span className="text-xs text-amber-400">可预览，不可正式交付</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-              {activeTab === 'replay' && (
-                <div className="space-y-4">
-                  <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl shadow-sm">
-                    <h4 className="text-xs font-medium text-slate-400 mb-4 uppercase tracking-wider">回放摘要</h4>
-                    <div className="space-y-4">
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs text-slate-500">最近回放版本</span>
-                        <span className="text-xs font-mono text-slate-300 bg-slate-800 px-1.5 py-0.5 rounded">v1.2 vs v1.1</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs text-slate-500">差异项</span>
-                        <span className="text-xs font-bold text-amber-400">12</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs text-slate-500">时间</span>
-                        <span className="text-xs text-slate-300">10 分钟前</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
+              </div>
             </div>
           </div>
+        </div>
         </div>
       </div>
 

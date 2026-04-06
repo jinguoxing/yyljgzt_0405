@@ -353,7 +353,15 @@ export default function AIOpsWorkbenchRequestDetail() {
             )}
             {requestStatus !== 'COMPLETED' && (
               <button 
-                onClick={() => setRequestStatus('COMPLETED')}
+                onClick={() => {
+                  // Simulate gate check failure
+                  setIsGateExpanded(true);
+                  // Scroll to gate section
+                  const gateEl = document.getElementById('gate-section');
+                  if (gateEl) {
+                    gateEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  }
+                }}
                 className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium rounded-lg transition-colors"
               >
                 完成交付
@@ -531,7 +539,7 @@ export default function AIOpsWorkbenchRequestDetail() {
           </div>
 
           {/* B. 闭环状态条 */}
-          <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-sm">
+          <div id="gate-section" className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-sm">
             <div className="p-4 flex items-center justify-between overflow-x-auto custom-scrollbar">
               <div className="flex items-center space-x-4 text-sm whitespace-nowrap">
                 <div className="flex items-center space-x-1"><span className="text-slate-500">阶段完成：</span><span className="text-slate-200 font-medium">3/5</span></div>
